@@ -1,6 +1,7 @@
 <?php
 session_start();
 include '../api/db.php';
+include '../api/grades_classification.php';
 include '../api/email_validation.php';
 
 use Psr\Http\Message\ResponseInterface as Response;
@@ -99,6 +100,15 @@ $app->get('/student/materii', function (Request $request, Response $response) {
     return $this->view->render($response, 'courses_student.twig', ['email' => $_SESSION['email'], 'denumiri' => $denumiri]);
 })->setName('student-materii');
 
+
+$app->get('/student/materii/{ID_m}/note', function (Request $req, Response $resp, $args) {
+    if (!isset($_SESSION['email'])) {
+        $resp->getBody()->write('Eroare! nu sunteti autentificat');
+        return $resp;
+    }
+    $_SESSION['ID_m'] = $args['ID_m'];
+    $this->view->render($resp, 'note_student.twig');
+});
 $app->get('/profesor/materii/{ID}/note', function (Request $request, Response $response) {
     if (!isset($_SESSION['email'])) { // daca nu is autentificat
         $newresponse = $response->withStatus(404);

@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+
+        /*
+        pre {
+            overflow: auto;
+            width: 500px;
+        }
+        pre:hover {
+            position: relative;
+            width: 700px;
+            z-index: 99;
+        }*/
+        pre {
+            width: 250px; /* specify width  */
+            white-space: pre-wrap; /* CSS3 browsers  */
+            white-space: -moz-pre-wrap !important; /* 1999+ Mozilla  */
+            white-space: -pre-wrap; /* Opera 4 thru 6 */
+            white-space: -o-pre-wrap; /* Opera 7 and up */
+            word-wrap: break-word; /* IE 5.5+ and up */
+            /* overflow-x: auto; */ /* Firefox 2 only */
+            /* width: 99%; */ /* only if needed */
+        }
+    </style>
+
+    <!--    <p><strong>Status</strong> Identificat</p> <br>
+                            <p><strong>Utilizator</strong> {{ uname }}</p> -->
+
+
+    <base target="_top">
+    <title>Notele obtinute</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Latest compiled and minified CSS -->
+    <script src="https://apis.google.com/js/platform.js" async defer></script>
+    <meta name="google-signin-client_id"
+          content="664708306458-21j554u148cstg43o7aimftthj40a9e0.apps.googleusercontent.com">
+    <!--  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="664708306458-21j554u148cstg43o7aimftthj40a9e0.apps.googleusercontent.com" crossorigin="anonymous">
+   -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
+            crossorigin="anonymous"></script>
+
+
+    <script type="text/javascript">
+
+        $(document).ready(function () {
+            function fetch_data() {
+                //  alert('am primit date...');
+                $.ajax({
+                    url: "http://localhost:8888/myslimsite/api/situatie_student.php",
+                    dataType: 'JSON',
+                    success: function (data) {
+                        if (data.Error != null && data.Error != undefined) {
+                            $('body').html('<h1>Error</h1><h3>No records</h3>'); // a fi putin personalizat
+                            return;
+                        }
+                        // info initiale
+                        $('#materie').html(data.note[0]['denumire']);
+                        $('#info_generale').html('<p><strong>Status</strong> Identificat</p> <br><p><strong>Utilizator</strong>' + data.uname + '</p>');
+                        // curs
+                        var note = data.note;
+                        var i;
+                        var htmlContentCurs = '', htmlContentLab = '';
+                        for (i = 0; i < note.length; i++) {
+                            if (note[i]['tip_nota'] == 'curs') {
+                                htmlContentCurs += '<tr><td><strong><pre> ' + note[i]['denumire_nota'] + '</strong></pre> </td><td><pre>' + note[i]['valoare'] + '</pre></td></tr>';
+                            } else if (note[i]['tip_nota'] == 'seminar' || note[i]['tip_nota'] == 'laborator') {
+                                htmlContentLab += '<tr><td><strong><pre> ' + note[i]['denumire_nota'] + '</strong></pre> </td><td><pre>' + note[i]['valoare'] + '</pre></td></tr>';
+                            }
+                        }
+                        $('#table_curs').html(htmlContentCurs);
+                        $('#table_seminar_lab').html(htmlContentLab);
+                        var htmlContentfinal = '';
+                        htmlContentfinal += ` <tr>
+                                <td>
+                                    <strong>
+                                        <pre>Curs</pre>
+                                    </strong>
+                                </td>
+                                <td><pre>` + data.nota_curs + `</pre></td>`;
+                        if (data.nota_curs >= 4.5) {
+                            htmlContentfinal += `<td class="table-success"> <strong> <pre><div class="alert alert-success" role="alert" style="width: 25%;"><i>PASS</i></pre> </strong></td>`;
+                        } else {
+                            htmlContentfinal += `<td class="table-danger"> <pre><strong> <i><div class="alert alert-danger" role="alert" style="width: 25%;">FAIL</i></div> </strong></pre>`;
+                        }
+                        htmlContentfinal += `
+                            </tr>
+                            <tr>
+                                <td>
+                                    <strong>
+                                        <pre>Seminar/Laborator</pre>
+                                    </strong>
+                                </td>
+                                <td><pre>`;
+                        htmlContentfinal += data.nota_seminar_laborator + `</pre></td>`;
+                        if (data.nota_seminar_laborator >= 4.5) {
+                            htmlContentfinal += `<td class="table-success"><pre><strong> <div class="alert alert-success" role="alert" style="width: 25%;"><i>PASS</i> </strong></pre></td>`;
+                        }
+                        if (data.nota_seminar_laborator < 4.5) {
+                            htmlContentfinal += `<td class="table-danger"> <strong><pre> <div class="alert alert-danger" role="alert" style="width: 25%;"><i>FAIL</i> </strong></pre></td>`;
+                        }
+                        htmlContentfinal += `
+                            </tr>
+                            <tr>
+                                <td>
+                                    <strong>
+                                        <pre>Final</pre>
+                                    </strong>
+                                </td>
+                                <td><pre>` + data.nota_seminar_laborator + `</pre></td>`;
+                        if (data.nota_seminar_laborator >= 4.5) {
+                            htmlContentfinal += `<td class="table-success"><pre><strong> <div class="alert alert-success" role="alert" style="width: 25%;"><i>PASS</i> </strong></pre>`;
+                        }
+                        if (data.nota_seminar_laborator < 4.5) {
+                            htmlContentfinal += ` <td class="table-danger"><pre> <strong><div class="alert alert-danger" role="alert" style="width: 25%;"> <i>FAIL</i> </strong></pre>`;
+                        }
+                        htmlContentfinal += `</tr>
+
+                    </strong>
+                    </td>`;
+                        //<td><pre>` +  data.nota_curs + ` </pre></td>`;
+
+                        $('#table_final').html(htmlContentfinal);
+                    },
+                    error: function (jqXHR, textStatus, errorThrown) {
+                        alert('eroare la ajax...\n' + jqXHR + '\n' + textStatus + '\n' + errorThrown);
+                    }
+                });
+            }
+
+            fetch_data();
+        });
+
+
+    </script>
+
+
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <style>
+        body {
+            padding-top: 50px;
+        / / background: black;
+        }
+
+    </style>
+
+    <!-- Optional theme
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" integrity="664708306458-21j554u148cstg43o7aimftthj40a9e0.apps.googleusercontent.com" crossorigin="anonymous">
+  -->  <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+    <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+    <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+</head>
+<body>
+
+
+<!--
+<nav class="navbar navbar-inverse navbar-fixed-top">
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="http://staff.fmi.uvt.ro">{{ note[0]['denumire'] }}</a>
+        </div>
+        <div id="navbar" class="collapse navbar-collapse">
+            <ul class="nav navbar-nav">
+                <li class="active"><a href="#">Home</a></li>
+                <li><a href="http://studentweb.uvt.ro">Studentweb</a></li>
+
+            </ul>
+        </div>/.nav-collapse
+    </div>
+</nav>-->
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark nav-fill w-100">
+    <!-- Navbar content -->
+    <a class="navbar-brand" href="#">UVT FMI Grading Script</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarText"
+            aria-controls="navbarText" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarText">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item active">
+                <a class="nav-link" href="#"><span class="sr-only" id="materie"><p id="materie"></p></span></a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://studentweb.uvt.ro">StudentWeb</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://info.uvt.ro">UVT FMI</a>
+            </li>
+        </ul>
+</nav>
+
+
+<div class="container">
+
+    <div class="row">
+        <!--
+        Aici putem pune diverse situatii
+
+        <? var extrainfo = {}; ?> -->
+    </div>
+    <div class="row">
+        <div class="span10">
+            <!--   <? var data = getData()[0]; ?> -->
+            <div class="accordion accordion-flush" id="accordionFlushExample">
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="flush-headingOne">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#flush-collapseOne" aria-expanded="false"
+                                aria-controls="flush-collapseOne">
+                            Informatii generale (utilizator curent)
+                        </button>
+                    </h2>
+                    <div id="flush-collapseOne" class="accordion-collapse collapse" aria-labelledby="flush-headingOne"
+                         data-bs-parent="#accordionFlushExample">
+                        <div class="accordion-body" id="info_generale">
+                            <!--    <p><strong>Status</strong> Identificat</p> <br>
+                            <p><strong>Utilizator</strong> {{ uname }}</p> -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!--  <strong>This is the first item's accordion body.</strong> It is shown by default, until the collapse plugin adds the appropriate classes that we use to style each element. These classes control the overall appearance, as well as the showing and hiding via CSS transitions. You can modify any of this with custom CSS or overriding our default variables. It's also worth noting that just about any HTML can go within the <code>.accordion-body</code>, though the transition does limit overflow.
+         -->
+
+            <!--
+                            <table class="table table-striped">
+                                <tr>
+                                    <td><b>Status</b></td><td> Identificat! </td> </tr>
+                                <tr>   <td><strong>Utilizator</strong></td><td> {{ uname }} </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div> -->
+
+            <div class="accordion accordion-flush" id="accordionFlushExample">
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="flush-headingOne">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#flush-collapseOne" aria-expanded="false"
+                                aria-controls="flush-collapseOne">
+                            Situatie Curs
+                        </button>
+                    </h2>
+                    <div id="flush-collapseOne" class="accordion-collapse collapse" aria-labelledby="flush-headingOne"
+                         data-bs-parent="#accordionFlushExample">
+                        <div class="accordion-body">
+                            <table class="table-striped" id="table_curs">
+
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion accordion-flush" id="accordionFlushExample">
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="flush-headingOne">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#flush-collapseOne" aria-expanded="false"
+                                aria-controls="flush-collapseOne">
+                            Situatie Seminar/Laborator
+                        </button>
+                    </h2>
+                    <div id="flush-collapseOne" class="accordion-collapse collapse" aria-labelledby="flush-headingOne"
+                         data-bs-parent="#accordionFlushExample">
+                        <div class="accordion-body">
+                            <table class="table-striped" id="table_seminar_lab">
+                                <!--       {% for nota in note %}
+                                            {% if nota['tip_nota'] == 'seminar' or nota['tip_nota'] == 'laborator' %}
+                                                <tr><td><strong><pre>{{ "%s\t" | format(nota['denumire_nota']) }}</strong></pre> </td><td><pre>{{ "\t\t%d" | format(nota['valoare']) }}</pre></td></tr>
+                                            {% endif %}
+                                        {% endfor %} -->
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+
+        <div class="accordion accordion-flush" id="accordionFlushExample">
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="flush-headingOne">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                            data-bs-target="#flush-collapseOne" aria-expanded="false" aria-controls="flush-collapseOne">
+                        Situatie Finala (Sesiunea 1)
+                    </button>
+                </h2>
+                <div id="flush-collapseOne" class="accordion-collapse collapse" aria-labelledby="flush-headingOne"
+                     data-bs-parent="#accordionFlushExample">
+                    <div class="accordion-body">
+                        <table class="table-striped" id="table_final">
+
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <!-- Button trigger modal -->
+    <!--     {% for nota in note %}
+                    <tr><td><strong> {{ nota['denumire_nota'] }}</strong></td> <td>{{ nota['valoare'] }}</td></tr>
+                {% endfor %}
+            </table> -->
+</div> <!-- SPAN 10 -->
+</div> <!-- ROW -->
+
+
+<div class="row">
+    <div class="span4"></div>
+    <div class="span4">
+        <div class="alert alert-danger">
+            <strong>Atentie</strong> Informatiile sunt prezentate cu caracter orientativ.
+        </div>
+        <div class="alert alert-info">
+            Cei care <strong>nu pot vedea nota finala</strong>, sunt rugati sa ii trimita un e-mail profesorului titular
+            de curs: <a href="mailto:{{ note[0]['username'] }}">{{ note[0]['username'] }}</a>
+        </div>
+        <!--
+            <div class="alert alert-warning">
+                <strong>Modalitatea de calcul a notei finale si a activitatii de pe parcurs</strong> <br>
+                <strong>La aceasta materie</strong>, nota finala se calculeaza astfel: 50% curs + 50% laborator. <br>
+                <strong>Nota de la curs se calculeaza astfel: </strong> {{ formula_curs }} <br>
+                <strong>Nota de la seminar/laborator se calculeaza astfel: </strong> {{ formula_seminar_laborator }}
+            </div>
+        </div> -->
+
+        <!-- Latest compiled and minified JavaScript -->
+        <!--   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="664708306458-21j554u148cstg43o7aimftthj40a9e0.apps.googleusercontent.com" crossorigin="anonymous"></script>
+-->
+</body>
+</html>
+
+
+
