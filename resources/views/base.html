@@ -5,7 +5,8 @@
     <meta charset="utf-8">
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
 
-    <title>Gp Bootstrap Template - Index</title>
+    <title>{% block title %}
+        {% end block %} </title>
     <meta content="" name="description">
     <meta content="" name="keywords">
 
@@ -37,54 +38,20 @@
     * License: https://bootstrapmade.com/license/
     ======================================================== -->
 
-    <script>
-        /*
-          $(document).ready(function(){
-              $.ajax({
-                 url: "api/user.php",
-                 success: function(data){
-                 $('h2').html('Welcome, ' + data + '!');
-                 }
-                 error: function(jqXHR, textStatus, errorThrown){
-                  alert('eroare la ajax...\n' + jqXHR + '\n' + textStatus + '\n' + errorThrown);
-                 }
-              })
-          });
-      */
 
-
-        // BUN
-        /*
-        $(document).ready(function () {
-            function fetch_data() {
-                //  alert('am primit date...');
-                $.ajax({
-                    url: "api/materii_prof_curent.php",
-                    success: function (data) {
-                        $('tbody').html(data);
-                    },
-                    error: function (jqXHR, textStatus, errorThrown) {
-                        alert('eroare la ajax...\n' + jqXHR + '\n' + textStatus + '\n' + errorThrown);
-                    }
-                });
-            }
-
-            fetch_data();
-        }); */
-    </script>
 </head>
 
 <body>
 
 <!-- ======= Header ======= -->
-<header id="header" class="fixed-top header-inner-pages">
+<header class="fixed-top header-inner-pages" id="header">
     <div class="container d-flex align-items-center justify-content-lg-between">
 
         <h1 class="logo me-auto me-lg-0"><a href="index.html">UVT<span></span></a></h1>
         <!-- Uncomment below if you prefer to use an image logo -->
         <!-- <a href="index.html" class="logo me-auto me-lg-0"><img src="assets/img/logo.png" alt="" class="img-fluid"></a>-->
 
-        <nav id="navbar" class="navbar order-last order-lg-0">
+        <nav class="navbar order-last order-lg-0" id="navbar">
             <ul>
                 <li><a class="nav-link scrollto " href="#hero">Home</a></li>
 
@@ -95,75 +62,23 @@
             <i class="bi bi-list mobile-nav-toggle"></i>
         </nav><!-- .navbar -->
 
-        <a href="#about" class="get-started-btn scrollto">Student web</a>
+        <a class="get-started-btn scrollto" href="#about">Student web</a>
 
     </div>
 </header><!-- End Header -->
 
 <!-- ======= Hero Section ======= -->
-<section id="hero" class="d-flex align-items-center justify-content-center">
+<section class="d-flex align-items-center justify-content-center" id="hero">
+    {% block content %}
     <div class="container" data-aos="fade-up">
 
         <div class="row justify-content-center" data-aos="fade-up" data-aos-delay="150">
-            <div class="col-xl-6 col-lg-8">
-                <h2>Welcome {{ email }} !</span></h2>
-                <h2></h2>
-            </div>
+            <div class="col-xl-6 col-lg-8"></div>
         </div>
-
-        <div class="row gy-4 mt-5 justify-content-center" data-aos="zoom-in" data-aos-delay="250">
-            <table>
-                <tbody>
-                {% for denumire in denumiri %}
-                    <div class="col-xl-2 col-md-4">
-                        <div class="icon-box">
-                            <h3><a href="">{{ denumire }}</a>
-                            </h3>
-                        </div>
-                    </div>
-                {% endfor %}
-
-                </tbody>
-                <!--
-              <div class="col-xl-2 col-md-4">
-                <div class="icon-box">
-                 <h3><a href="">Operating systems</a></h3>
-                </div>
-              </div>
-              <div class="col-xl-2 col-md-4">
-
-                <div class="icon-box">
-                 <h3><a href="">Graphics and user interface</a></h3>
-                </div>
-              </div>
-              <div class="col-xl-2 col-md-4">
-                <div class="icon-box">
-
-                  <h3><a href="">Web programming</a></h3>
-                </div>
-              </div>
-              <div class="col-xl-2 col-md-4">
-                <div class="icon-box">
-
-                  <h3><a href="">Concurrent and Distributed Programming</a></h3>
-                </div>
-              </div>
-              <div class="col-xl-2 col-md-4">
+    </div>
 
 
-                <div class="icon-box">
-
-                  <h3><a href="">Management information system</a></h3>
-                </div>
-              </div>
-              <div class="col-xl-2 col-md-4">
-
-
-            </div> -->
-
-            </table>
-
-
+    {% endblock %}
 </section><!-- End Hero -->
 
 <main id="main">

@@ -10,6 +10,7 @@ function set_url($url)
 //header('Location:/');
 $content = '';
 $username = 'florin.fortis@e-uvt.ro'; /* to be modified! */
+$username = $_SESSION['email']; // test
 
 /** header("Content-Type:application/json"); **/ /* the format we're going to use. */
 //include('database.php');
