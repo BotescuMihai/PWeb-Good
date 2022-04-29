@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+
+        /*
+        pre {
+            overflow: auto;
+            width: 500px;
+        }
+        pre:hover {
+            position: relative;
+            width: 700px;
+            z-index: 99;
+        }*/
+        pre {
+            width: 250px; /* specify width  */
+            white-space: pre-wrap; /* CSS3 browsers  */
+            white-space: -moz-pre-wrap !important; /* 1999+ Mozilla  */
+            white-space: -pre-wrap; /* Opera 4 thru 6 */
+            white-space: -o-pre-wrap; /* Opera 7 and up */
+            word-wrap: break-word; /* IE 5.5+ and up */
+            /* overflow-x: auto; */ /* Firefox 2 only */
+            /* width: 99%; */ /* only if needed */
+        }
+    </style>
+
+    <!--    <p><strong>Status</strong> Identificat</p> <br>
+                            <p><strong>Utilizator</strong> {{ uname }}</p> -->
+
+
+    <base target="_top">
+    <title>Informatii legate de curs</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Latest compiled and minified CSS -->
+    <script src="https://apis.google.com/js/platform.js" async defer></script>
+    <meta name="google-signin-client_id"
+          content="664708306458-21j554u148cstg43o7aimftthj40a9e0.apps.googleusercontent.com">
+    <!--  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="664708306458-21j554u148cstg43o7aimftthj40a9e0.apps.googleusercontent.com" crossorigin="anonymous">
+   -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
+            crossorigin="anonymous"></script>
+    <script type="text/javascript">
+
+        $(document).ready(function () {
+            function fetch_materie_info() {
+                $.ajax(
+                    {
+                        url: "http://localhost:8888/myslimsite/api/get_info_materie.php",
+                        dataType: 'JSON',
+                        success: function (data) {
+                            var html = '<strong>Numar persoane inscrise</strong> ' + data.inscrisi + '<br><strong>Titular de curs:</strong>' + data.titular;
+                            $('#info_materie').html(html);
+                            $('#nume_materie').html(data.materie);
+                        },
+                        error: function () {
+                            console.log('Error ajax!');
+                        }
+                    }
+                );
+            }
+
+            fetch_materie_info();
+        });
+    </script>
+</head>
+
+<body>
+<button type="button" class="btn btn-primary btn-lg" id="nume_materie"></button>
+<h1>Diverse informatii legate de materie</h1>
+<div class="alert alert-primary">
+
+    <p id="info_materie">
+
+    </p>
+</div>
+</body>
+</html>

@@ -61,8 +61,39 @@
     * Author: BootstrapMade.com
     * License: https://bootstrapmade.com/license/
     ======================================================== -->
+    <!-- <button type="button" class="btn btn-primary btn-lg btn-block">Block level button</button> -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 
     <script>
+        $(document).ready(function () {
+            function fetch_materii() {
+                $.ajax(
+                    {
+                        url: "http://localhost:8888/myslimsite/api/materii_profesor.php",
+                        dataType: 'JSON',
+                        success: function (data) {
+                            var html = '';
+                            if (data.Error != undefined && data.Error != null) {
+                                html = '<h1>Eroare!</h1><h3>Nu aveti materii definite!</h3>';
+                                $('tbody').html('<tr><td>' + html + '</td></tr>');
+                                return;
+                            }
+                            var html = '<tr>';
+                            for (var i = 0; i < data.length; i++) {
+                                html += `<td><a class="btn btn-primary btn-lg btn-block" href="http://localhost:8888/myslimsite/public/profesor/materii/` + data[i]['id'] + `/studenti/note">` + data[i]['denumire'] + `</a>` + `<a class="btn btn-outline-warning btn-lg btn-block" href="http://localhost:8888/myslimsite/public/profesor/materii/` + data[i]['id'] + `"> Informatii legate de materie</a></td>`;
+                            }
+                            html += `</tr>`;
+                            $('tbody').html(html);
+                        },
+                        error: function () {
+                            console.log('Error ajax!');
+                        }
+                    }
+                );
+            }
+
+            fetch_materii();
+        });
         /*
           $(document).ready(function(){
               $.ajax({
@@ -140,10 +171,11 @@
     <div class="card-header">Bine ati revenit</div>
     <div class="card-body">
         <h5 class="card-title">Informatii utilizator curent</h5>
-        <p class="card-text"><strong>Adresa de e-mail la login: </strong> {{ email }}</p>
+        <p class="card-text"><strong>Adresa de e-mail la login: </strong> <?php echo $_SESSION['email']; ?> </p>
         <p class="card-text"><strong>Tip account: </strong> Profesor</p>
     </div>
 </div>
+
 
 <!-- Uncomment below if you prefer to use an image logo -->
 <!-- <a href="index.html" class="logo me-auto me-lg-0"><img src="assets/img/logo.png" alt="" class="img-fluid"></a>-->
@@ -164,13 +196,7 @@
 </div>
 </header><!-- End Header -->
 
-<!-- ======= Hero Section ======= -->
-<!--<section id="hero" class="d-flex align-items-center justify-content-center">
-    <div class="container" data-aos="fade-up">
 
-        <div class="row justify-content-center" data-aos="fade-up" data-aos-delay="150">
-            <div class="col-xl-6 col-lg-8"> -->
-<!--     <h2>Welcome {{ email }} !</span></h2> -->
 <h2></h2>
 </div>
 </div>
@@ -178,57 +204,9 @@
 <div class="row gy-4 mt-5 justify-content-center" data-aos="zoom-in" data-aos-delay="250">
     <table>
         <tbody>
-        <div id="container" class="cols">
-            {% for denumire in denumiri %}
 
-                <td>
-                    <div class="card text-white bg-secondary mb-3" style="max-width: 18rem;">
-                        <div class="card-header">{{ denumire }}</div>
-                        <div class="card-body">
-                            <h5 class="card-title">Selectati materia...</h5>
-                            <!--  <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p> -->
-                        </div>
-                    </div>
-                </td>
-            {% endfor %}
-        </div>
         </tbody>
-        <!--
-      <div class="col-xl-2 col-md-4">
-        <div class="icon-box">
-         <h3><a href="">Operating systems</a></h3>
-        </div>
-      </div>
-      <div class="col-xl-2 col-md-4">
 
-        <div class="icon-box">
-         <h3><a href="">Graphics and user interface</a></h3>
-        </div>
-      </div>
-      <div class="col-xl-2 col-md-4">
-        <div class="icon-box">
-
-          <h3><a href="">Web programming</a></h3>
-        </div>
-      </div>
-      <div class="col-xl-2 col-md-4">
-        <div class="icon-box">
-
-          <h3><a href="">Concurrent and Distributed Programming</a></h3>
-        </div>
-      </div>
-      <div class="col-xl-2 col-md-4">
-
-
-        <div class="icon-box">
-
-          <h3><a href="">Management information system</a></h3>
-        </div>
-      </div>
-      <div class="col-xl-2 col-md-4">
-
-
-    </div> -->
 
             </table>
 

@@ -30,7 +30,7 @@
 
 
     <base target="_top">
-    <title>Notele obtinute</title>
+    <title>Notele obtinute de un anumit student</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- Latest compiled and minified CSS -->
     <script src="https://apis.google.com/js/platform.js" async defer></script>
@@ -50,106 +50,87 @@
             crossorigin="anonymous"></script>
 
 
+    <!-- <a class="dropdown-item" href="#">Action</a> -->
+
     <script type="text/javascript">
 
         $(document).ready(function () {
+            function fetch_students() {
+                $.ajax(
+                    {
+                        url: "http://localhost:8888/myslimsite/api/get_all_students.php",
+                        dataType: 'JSON',
+                        success: function (data) {
+                            var html = '';
+                            // alert(data);
+                            for (var i = 0; i < data.length; i++) {
+                                html += "<a class='dropdown-item' href='http://localhost:8888/myslimsite/public/profesor/materii/1/studenti/" + data[i]['id'] + "/note'>[" + data[i]['id'] + "] -- " + data[i]['username'] + "</a>";
+                            }
+                            $('#studenti_menu').html(html);
+                        },
+                        error: function () {
+                            console.log('Error ajax!');
+                        }
+                    }
+                );
+            }
+
             function fetch_data() {
                 //  alert('am primit date...');
                 $.ajax({
-                    url: "http://localhost:8888/myslimsite/api/situatie_student.php",
+                    url: "http://localhost:8888/myslimsite/api/get_situatie_student.php",
                     dataType: 'JSON',
                     success: function (data) {
-                        if (data.Error != null && data.Error != undefined) {
-                            $('body').html(`<div class="alert alert-danger alert-dismissible d-flex align-items-center fade show">
-    <i class="bi-exclamation-octagon-fill"></i>
-    <strong class="mx-2">Eroare!</strong> Continut indisponibil
-    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-</div>`); // a fi putin personalizat
+
+                        if (data.Error != undefined && data.Error != null) {
+                            $('body').html('<h1>Error!</h1><h3>No records found!</h3>');
                             return;
                         }
-                        //email prof
-                        $('#email').html("Cei care <strong>nu pot vedea nota finala</strong>, sunt rugati sa ii trimita un e-mail profesorului titular de curs: <a href='mailto:" + data.note[0]['username'] + "'>" + data.note[0]['username']);
-                        // info initiale
-                        $('#materie').html(data.note[0]['denumire']);
-                        $('#info_generale').html('<p><strong>Status</strong> Identificat</p> <br><p><strong>Utilizator</strong>' + data.uname + '</p>');
-                        // curs
+                        var pass = `<td><div class="alert alert-success alert-dismissible d-flex align-items-center fade show" style="witdh: 30%">
+<i class="bi bi-check-all"></i>    <strong class="mx-2">PASS</strong>
+    </div></td>`;
+                        var fail = `<td><div class="alert alert-danger alert-dismissible d-flex align-items-center fade show" style="witdh: 30%">
+    <i class="bi bi-dash-circle-fill"></i>
+    <strong class="mx-2">FAIL</strong>
+    </div></td>`;
+                        var htmlInitiale = "<tr class='table-info'><td><strong>E-mail student (@e-uvt.ro)</strong></td><td>" + data.uname + "</td></tr>";
+                        var htmlCurs = '', htmlSeminarLab = '', htmlFinal = '';
                         var note = data.note;
-                        var i;
-                        var htmlContentCurs = '', htmlContentLab = '';
-                        for (i = 0; i < note.length; i++) {
+                        $('#info_generale').html(htmlInitiale);
+                        $('#materie').html(data.materie);
+                        for (var i = 0; i < note.length; i++) {
                             if (note[i]['tip_nota'] == 'curs') {
-                                htmlContentCurs += '<tr><td><strong><pre> ' + note[i]['denumire_nota'] + '</strong></pre> </td><td><pre>' + note[i]['valoare'] + '</pre></td></tr>';
+                                htmlCurs += '<tr><td  contenteditable="true"><strong>' + note[i]['denumire_nota'] + '</strong></td><td  contenteditable="true">' + note[i]['valoare'] + '</td><td contenteditable="true">' + note[i]['pondere'] + '%</td></tr>';
                             } else if (note[i]['tip_nota'] == 'seminar' || note[i]['tip_nota'] == 'laborator') {
-                                htmlContentLab += '<tr><td><strong><pre> ' + note[i]['denumire_nota'] + '</strong></pre> </td><td><pre>' + note[i]['valoare'] + '</pre></td></tr>';
+                                htmlSeminarLab += '<tr><td contenteditable="true"><strong>' + note[i]['denumire_nota'] + '</strong></td><td  contenteditable="true">' + note[i]['valoare'] + '</td><td contenteditable="true">' + note[i]['pondere'] + '%</td></tr>';
                             }
                         }
-                        $('#table_curs').html(htmlContentCurs);
-                        $('#table_seminar_lab').html(htmlContentLab);
-                        var htmlContentfinal = '';
-                        htmlContentfinal += ` <tr>
-                                <td>
-                                    <strong>
-                                        <pre>Curs</pre>
-                                    </strong>
-                                </td>
-                                <td><pre>` + data.nota_curs + `</pre></td>`;
-                        if (data.nota_curs >= 4.5) {
-                            htmlContentfinal += `<td class="table-success"> <strong> <pre><div class="alert alert-success" role="alert" style="width: 25%;"><i>PASS</i></pre> </strong></td>`;
-                        } else {
-                            htmlContentfinal += `<td class="table-danger"> <pre><strong> <i><div class="alert alert-danger" role="alert" style="width: 25%;">FAIL</i></div> </strong></pre>`;
-                        }
-                        htmlContentfinal += `
-                            </tr>
-                            <tr>
-                                <td>
-                                    <strong>
-                                        <pre>Seminar/Laborator</pre>
-                                    </strong>
-                                </td>
-                                <td><pre>`;
-                        htmlContentfinal += data.nota_seminar_laborator + `</pre></td>`;
-                        if (data.nota_seminar_laborator >= 4.5) {
-                            htmlContentfinal += `<td class="table-success"><pre><strong> <div class="alert alert-success" role="alert" style="width: 25%;"><i>PASS</i> </strong></pre></td>`;
-                        }
-                        if (data.nota_seminar_laborator < 4.5) {
-                            htmlContentfinal += `<td class="table-danger"> <strong><pre> <div class="alert alert-danger" role="alert" style="width: 25%;"><i>FAIL</i> </strong></pre></td>`;
-                        }
-                        htmlContentfinal += `
-                            </tr>
-                            <tr>
-                                <td>
-                                    <strong>
-                                        <pre>Final</pre>
-                                    </strong>
-                                </td>
-                                <td><pre>` + data.nota_seminar_laborator + `</pre></td>`;
-                        if (data.nota_seminar_laborator >= 4.5) {
-                            htmlContentfinal += `<td class="table-success"><pre><strong> <div class="alert alert-success" role="alert" style="width: 25%;"><i>PASS</i> </strong></pre>`;
-                        }
-                        if (data.nota_seminar_laborator < 4.5) {
-                            htmlContentfinal += ` <td class="table-danger"><pre> <strong><div class="alert alert-danger" role="alert" style="width: 25%;"> <i>FAIL</i> </strong></pre>`;
-                        }
-                        htmlContentfinal += `</tr>
-
-                    </strong>
-                    </td>`;
-
-                        // buton pt prezente
-                        $('body').append(`<td><a class="btn btn-primary btn-lg btn-block" href="http://localhost:8888/myslimsite/public/student/materii/` + data.id_materie + `/prezente">` + `Vezi prezente</a>`);
-                        //<td><pre>` +  data.nota_curs + ` </pre></td>`;
-
-                        $('#table_final').html(htmlContentfinal);
+                        htmlFinal = '<tr><td><strong>Curs</strong><td>' + data.final_curs + '</td>';
+                        if (data.final_curs >= 5)
+                            htmlFinal += pass;
+                        else htmlFinal += fail;
+                        htmlFinal += '</tr><tr><td><strong>Seminar/Lab</strong></td><td>' + data.final_seminar_lab + '</td>';
+                        if (data.final_seminar_lab >= 5)
+                            htmlFinal += pass;
+                        else htmlFinal += fail;
+                        htmlFinal += '</tr>';
+                        if (data.final_curs >= 5 && data.final_seminar_lab >= 5)
+                            htmlFinal += pass;
+                        else htmlFinal += fail;
+                        $('#table_curs').html(htmlCurs);
+                        $('#table_seminar_lab').html(htmlSeminarLab);
+                        $('#table_final').html(htmlFinal);
+                        //}
                     },
                     error: function (jqXHR, textStatus, errorThrown) {
-                        alert('eroare la ajax...\n' + jqXHR + '\n' + textStatus + '\n' + errorThrown);
+                        //alert('eroare la ajax...\n' + jqXHR + '\n' + textStatus + '\n' + errorThrown);
                     }
                 });
             }
 
             fetch_data();
+            fetch_students();
         });
-
-
     </script>
 
 
@@ -213,6 +194,21 @@
             <li class="nav-item">
                 <a class="nav-link" href="https://info.uvt.ro">UVT FMI</a>
             </li>
+            <div class="btn-group">
+                <button type="button" class="btn btn-danger dropdown-toggle" data-toggle="dropdown" aria-haspopup="true"
+                        aria-expanded="false">
+                    Selectati un student...
+                </button>
+                <div class="dropdown-menu" id="studenti_menu">
+                    <!--
+                    <a class="dropdown-item" href="#">Action</a>
+                    <a class="dropdown-item" href="#">Another action</a>
+                    <a class="dropdown-item" href="#">Something else here</a>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item" href="#">Separated link</a> -->
+                </div>
+            </div>
+
         </ul>
 </nav>
 
@@ -234,12 +230,15 @@
                         <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
                                 data-bs-target="#flush-collapseOne" aria-expanded="false"
                                 aria-controls="flush-collapseOne">
-                            Informatii generale (utilizator curent)
+                            Informatii generale (student)
                         </button>
                     </h2>
                     <div id="flush-collapseOne" class="accordion-collapse collapse" aria-labelledby="flush-headingOne"
                          data-bs-parent="#accordionFlushExample">
-                        <div class="accordion-body" id="info_generale">
+                        <div class="accordion-body">
+                            <table class="table table-striped" id="info_generale">
+
+                            </table>
                             <!--    <p><strong>Status</strong> Identificat</p> <br>
                             <p><strong>Utilizator</strong> {{ uname }}</p> -->
                         </div>
@@ -272,7 +271,7 @@
                     <div id="flush-collapseOne" class="accordion-collapse collapse" aria-labelledby="flush-headingOne"
                          data-bs-parent="#accordionFlushExample">
                         <div class="accordion-body">
-                            <table class="table-striped" id="table_curs">
+                            <table class="table table-striped" id="table_curs">
 
                             </table>
                         </div>
@@ -292,7 +291,7 @@
                     <div id="flush-collapseOne" class="accordion-collapse collapse" aria-labelledby="flush-headingOne"
                          data-bs-parent="#accordionFlushExample">
                         <div class="accordion-body">
-                            <table class="table-striped" id="table_seminar_lab">
+                            <table class="table table-striped" id="table_seminar_lab">
                                 <!--       {% for nota in note %}
                                             {% if nota['tip_nota'] == 'seminar' or nota['tip_nota'] == 'laborator' %}
                                                 <tr><td><strong><pre>{{ "%s\t" | format(nota['denumire_nota']) }}</strong></pre> </td><td><pre>{{ "\t\t%d" | format(nota['valoare']) }}</pre></td></tr>
@@ -318,7 +317,7 @@
                 <div id="flush-collapseOne" class="accordion-collapse collapse" aria-labelledby="flush-headingOne"
                      data-bs-parent="#accordionFlushExample">
                     <div class="accordion-body">
-                        <table class="table-striped" id="table_final">
+                        <table class="table table-striped" id="table_final">
 
                         </table>
                     </div>
