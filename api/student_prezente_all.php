@@ -12,7 +12,7 @@ $query = "SELECT materie.denumire, student.id AS sid, materie.id AS mid, student
 FROM prezenta
 INNER JOIN student ON prezenta.student_id = student.id
 INNER JOIN materie ON prezenta.materie_id = materie.id
-WHERE prezenta.materie_id = " . $_SESSION['student_ID_m'];
+WHERE prezenta.materie_id = " . $_SESSION['student_ID_m'] . " AND student.username='" . $_SESSION['email'] . "'";
 $stmt = $DB->execute_SELECT($query);
 $note = array();
 if (count($stmt) == 0) {

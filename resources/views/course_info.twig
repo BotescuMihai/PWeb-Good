@@ -57,6 +57,7 @@
                         url: "http://localhost:8888/myslimsite/api/get_info_materie.php",
                         dataType: 'JSON',
                         success: function (data) {
+                            console.log(data);
                             var html = '<strong>Numar persoane inscrise</strong> ' + data.inscrisi + '<br><strong>Titular de curs:</strong>' + data.titular;
                             $('#info_materie').html(html);
                             $('#nume_materie').html(data.materie);

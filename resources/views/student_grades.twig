@@ -61,10 +61,11 @@
                         url: "http://localhost:8888/myslimsite/api/get_all_students.php",
                         dataType: 'JSON',
                         success: function (data) {
+                            console.log(data);
                             var html = '';
                             // alert(data);
                             for (var i = 0; i < data.length; i++) {
-                                html += "<a class='dropdown-item' href='http://localhost:8888/myslimsite/public/profesor/materii/1/studenti/" + data[i]['id'] + "/note'>[" + data[i]['id'] + "] -- " + data[i]['username'] + "</a>";
+                                html += "<a class='dropdown-item' href='http://localhost:8888/myslimsite/public/profesor/materii/" + data[i]['id_m'] + "/studenti/" + data[i]['id'] + "/note'>[" + data[i]['id'] + "] -- " + data[i]['username'] + "</a>";
                             }
                             $('#studenti_menu').html(html);
                         },

@@ -132,12 +132,18 @@ $app->post('/', function (Request $request, Response $response, array $args) {
     $router = $this->router;
     $_SESSION['email'] = $_POST['email'];
     if (profesor($_SESSION['email'])) {
-        return $this->view->render($response, 'courses_teacher.twig');
-    } else {
-
-        return $this->view->render($response, 'courses_student.twig');
-    }
+        return $response->withRedirect($router->pathFor('profesor-login'));
+    } else return $response->withRedirect($router->pathFor('student-login'));
 });
+
+$app->get('/student', function (Request $request, Response $response, array $args) {
+    return $this->view->render($response, 'courses_student.twig');
+})->setName('student-login');
+
+$app->get('/profesor', function (Request $request, Response $response, array $args) {
+    return $this->view->render($response, 'courses_teacher.twig');
+})->setName('profesor-login');
+
 
 $app->get('/profesor/materii/{ID_m}/studenti/{student_ID}/prezente/{tip}', function (Request $request, Response $response, $args) {
     if (!isset($_SESSION['email'])) { // daca nu is autentificat

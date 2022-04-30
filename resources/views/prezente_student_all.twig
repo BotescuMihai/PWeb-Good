@@ -61,6 +61,7 @@
                         url: "http://localhost:8888/myslimsite/api/student_prezente_all.php",
                         dataType: 'JSON',
                         success: function (data) {
+                            console.log(data);
                             $('#materie').html(data[0]['materie']);
                             $('#info_generale').html(`<tr><td><strong>E-mail</strong></td><td>` + data[0]['username'] + `</td></tr>`);
                             $('#table_curs').html(`<tr><td><strong>Prezente curs</strong></td><td>` + data[0]['numar'] + `</td></tr>`);

@@ -30,7 +30,7 @@
 
 
     <base target="_top">
-    <title>Notele obtinute</title>
+    <title>Notele obtinute de un anumit student</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- Latest compiled and minified CSS -->
     <script src="https://apis.google.com/js/platform.js" async defer></script>
@@ -59,6 +59,7 @@
                     url: "http://localhost:8888/myslimsite/api/situatie_student.php",
                     dataType: 'JSON',
                     success: function (data) {
+                        console.log(data);
                         if (data.Error != null && data.Error != undefined) {
                             $('body').html(`<div class="alert alert-danger alert-dismissible d-flex align-items-center fade show">
     <i class="bi-exclamation-octagon-fill"></i>
@@ -68,13 +69,20 @@
                             return;
                         }
                         //email prof
-                        $('#email').html("Cei care <strong>nu pot vedea nota finala</strong>, sunt rugati sa ii trimita un e-mail profesorului titular de curs: <a href='mailto:" + data.note[0]['username'] + "'>" + data.note[0]['username']);
+                        $('#email').html("Cei care <strong>nu pot vedea nota finala</strong>, sunt rugati sa ii trimita un e-mail profesorului titular de curs: <a href='mailto:" + data.profesor + "'>" + data.profesor);
                         // info initiale
                         $('#materie').html(data.note[0]['denumire']);
                         $('#info_generale').html('<p><strong>Status</strong> Identificat</p> <br><p><strong>Utilizator</strong>' + data.uname + '</p>');
                         // curs
                         var note = data.note;
                         var i;
+                        var pass = `<td><div class="alert alert-success alert-dismissible d-flex align-items-center fade show" style="witdh: 30%">
+<i class="bi bi-check-all"></i>    <strong class="mx-2">PASS</strong>
+    </div></td>`;
+                        var fail = `<td><div class="alert alert-danger alert-dismissible d-flex align-items-center fade show" style="witdh: 30%">
+    <i class="bi bi-dash-circle-fill"></i>
+    <strong class="mx-2">FAIL</strong>
+    </div></td>`;
                         var htmlContentCurs = '', htmlContentLab = '';
                         for (i = 0; i < note.length; i++) {
                             if (note[i]['tip_nota'] == 'curs') {
@@ -94,9 +102,9 @@
                                 </td>
                                 <td><pre>` + data.nota_curs + `</pre></td>`;
                         if (data.nota_curs >= 4.5) {
-                            htmlContentfinal += `<td class="table-success"> <strong> <pre><div class="alert alert-success" role="alert" style="width: 25%;"><i>PASS</i></pre> </strong></td>`;
+                            htmlContentfinal += pass;
                         } else {
-                            htmlContentfinal += `<td class="table-danger"> <pre><strong> <i><div class="alert alert-danger" role="alert" style="width: 25%;">FAIL</i></div> </strong></pre>`;
+                            htmlContentfinal += fail;
                         }
                         htmlContentfinal += `
                             </tr>
@@ -109,10 +117,22 @@
                                 <td><pre>`;
                         htmlContentfinal += data.nota_seminar_laborator + `</pre></td>`;
                         if (data.nota_seminar_laborator >= 4.5) {
-                            htmlContentfinal += `<td class="table-success"><pre><strong> <div class="alert alert-success" role="alert" style="width: 25%;"><i>PASS</i> </strong></pre></td>`;
+                            htmlContentfinal += pass;
+                            // htmlContentfinal += `<td class="table-success"><pre><strong> <div class="alert alert-success" role="alert" style="width: 25%;"><i>PASS</i> </strong></pre></td>`;
                         }
                         if (data.nota_seminar_laborator < 4.5) {
-                            htmlContentfinal += `<td class="table-danger"> <strong><pre> <div class="alert alert-danger" role="alert" style="width: 25%;"><i>FAIL</i> </strong></pre></td>`;
+                            htmlContentfinal += fail;
+                        }
+                        if (data.ponderi == undefined || data.ponderi == null) {
+                            htmlContentfinal += `</tr><tr><td><div class="alert alert-warning alert-dismissible d-flex align-items-center fade show" style="witdh: 30%">
+<i class="bi bi-exclamation-triangle"></i>    <strong class="mx-2">Atentie</strong> Profesorul nu a stabilit inca modul de calcul al notei finale! Incercati mai tarziu!
+    </div></td></tr>`;
+                            // buton pt prezente
+                            $('body').append(`<td><a class="btn btn-primary btn-lg btn-block" href="http://localhost:8888/myslimsite/public/student/materii/` + data.id_materie + `/prezente">` + `Vezi prezente</a>`);
+                            //<td><pre>` +  data.nota_curs + ` </pre></td>`;
+
+                            $('#table_final').html(htmlContentfinal);
+                            return;
                         }
                         htmlContentfinal += `
                             </tr>
@@ -122,17 +142,19 @@
                                         <pre>Final</pre>
                                     </strong>
                                 </td>
-                                <td><pre>` + data.nota_seminar_laborator + `</pre></td>`;
+                                <td><pre>` + ((parseInt(data['ponderi']['seminar_laborator']) / 100) * (parseInt(data.nota_seminar_laborator)) + ((parseInt(data['ponderi']['curs']) / 100) * parseInt(data.nota_curs))).toString() + `</pre></td>`;
+
                         if (data.nota_seminar_laborator >= 4.5) {
-                            htmlContentfinal += `<td class="table-success"><pre><strong> <div class="alert alert-success" role="alert" style="width: 25%;"><i>PASS</i> </strong></pre>`;
+                            htmlContentfinal += pass;
                         }
                         if (data.nota_seminar_laborator < 4.5) {
-                            htmlContentfinal += ` <td class="table-danger"><pre> <strong><div class="alert alert-danger" role="alert" style="width: 25%;"> <i>FAIL</i> </strong></pre>`;
+                            htmlContentfinal += fail;
                         }
                         htmlContentfinal += `</tr>
 
                     </strong>
-                    </td>`;
+                    </td><tr><td><div class="alert alert-secondary alert-dismissible d-flex align-items-center fade show" style="witdh: 30%">
+<i class="bi bi-exclamation-triangle"></i><strong>Nota finala:</strong> ` + data['ponderi']['curs'].toString() + `% <strong>nota de la curs </strong>; ` + data['ponderi']['seminar_laborator'].toString() + `% <strong>nota de la seminar/laborator</strong></td></tr>`;
 
                         // buton pt prezente
                         $('body').append(`<td><a class="btn btn-primary btn-lg btn-block" href="http://localhost:8888/myslimsite/public/student/materii/` + data.id_materie + `/prezente">` + `Vezi prezente</a>`);

@@ -72,6 +72,7 @@
                         url: "http://localhost:8888/myslimsite/api/materii_profesor.php",
                         dataType: 'JSON',
                         success: function (data) {
+                            console.log(data);
                             var html = '';
                             if (data.Error != undefined && data.Error != null) {
                                 html = '<h1>Eroare!</h1><h3>Nu aveti materii definite!</h3>';
@@ -83,6 +84,7 @@
                                 html += `<td><a class="btn btn-primary btn-lg btn-block" href="http://localhost:8888/myslimsite/public/profesor/materii/` + data[i]['id'] + `/studenti/note">` + data[i]['denumire'] + `</a>` + `<a class="btn btn-outline-warning btn-lg btn-block" href="http://localhost:8888/myslimsite/public/profesor/materii/` + data[i]['id'] + `"> Informatii legate de materie</a></td>`;
                             }
                             html += `</tr>`;
+                            $('#email').html(data[0]['email']);
                             $('tbody').html(html);
                         },
                         error: function () {
@@ -171,7 +173,8 @@
     <div class="card-header">Bine ati revenit</div>
     <div class="card-body">
         <h5 class="card-title">Informatii utilizator curent</h5>
-        <p class="card-text"><strong>Adresa de e-mail la login: </strong> <?php echo $_SESSION['email']; ?> </p>
+        <p class="card-text"><strong>Adresa de e-mail la login: </strong>
+        <p id="email"></p>
         <p class="card-text"><strong>Tip account: </strong> Profesor</p>
     </div>
 </div>
