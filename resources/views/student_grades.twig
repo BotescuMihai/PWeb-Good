@@ -54,6 +54,21 @@
 
     <script type="text/javascript">
 
+        var id = 0;
+
+        function onclickID(ID) {
+            id = ID;
+        }
+
+        function add_nota_curs() {
+            $('#table_curs').append(`<tr><td contenteditable="true">Testt</td><td contenteditable="true"></td></tr>`);
+        }
+
+        function add_nota_seminar_laborator() {
+            $('#table_seminar_lab').append(`<tr><td contenteditable="true"></td><td contenteditable="true"></td></tr>`);
+        }
+
+
         $(document).ready(function () {
             function fetch_students() {
                 $.ajax(
@@ -65,7 +80,7 @@
                             var html = '';
                             // alert(data);
                             for (var i = 0; i < data.length; i++) {
-                                html += "<a class='dropdown-item' href='http://localhost:8888/myslimsite/public/teacher/courses/" + data[i]['id_m'] + "/students/" + data[i]['id'] + "/grades'>[" + data[i]['id'] + "] -- " + data[i]['username'] + "</a>";
+                                html += "<a class='dropdown-item' onclick='onclickID(' + data[i]['id'] + ')' href='http://localhost:8888/myslimsite/public/teacher/courses/" + data[i]['id_m'] + "/students/" + data[i]['id'] + "/grades'>[" + data[i]['id'] + "] -- " + data[i]['username'] + "</a>";
                             }
                             $('#studenti_menu').html(html);
                         },
@@ -79,7 +94,7 @@
             function fetch_data() {
                 //  alert('am primit date...');
                 $.ajax({
-                    url: "http://localhost:8888/myslimsite/api/get_situatie_student.php",
+                    url: "http://localhost:8888/myslimsite/public/profesor/materii/" + {{ ID_m }} +"/studenti/" + {{ student_ID }} +"/note",
                     dataType: 'JSON',
                     success: function (data) {
 
@@ -118,6 +133,8 @@
                         if (data.final_curs >= 5 && data.final_seminar_lab >= 5)
                             htmlFinal += pass;
                         else htmlFinal += fail;
+                        htmlCurs += `<td><button class="btn btn-primary btn-lg btn-block onclick='add_nota_curs()'">Adauga nota</button>`;
+                        htmlSeminarLab += `<td><button class="btn btn-primary btn-lg btn-block onclick='add_nota_seminar_laborator()'">Adauga nota</button>`;
                         $('#table_curs').html(htmlCurs);
                         $('#table_seminar_lab').html(htmlSeminarLab);
                         $('#table_final').html(htmlFinal);

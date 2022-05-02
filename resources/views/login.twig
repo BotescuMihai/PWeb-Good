@@ -16,7 +16,6 @@
             crossorigin="anonymous"></script>
     <script>
         $("#form").submit(function (e) {
-            e.preventDefault(); // avoid to execute the actual submit of the form.
             var form = $(this);
             $.ajax({
                 type: "POST",
@@ -29,6 +28,7 @@
                     console.log("EROARE!!!!");
                 },
             });
+            e.preventDefault(); // avoid to execute the actual submit of the form.
         });
 
         function onSignIn(googleUser) {

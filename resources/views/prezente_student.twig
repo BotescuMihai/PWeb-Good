@@ -62,7 +62,6 @@
                         dataType: 'JSON',
                         success: function (data) {
                             var html = '';
-                            // alert(data);
                             console.log(data);
                             $('#materie').html(data.materie);
                             $('#info_generale').html(`<tr><td><strong>E-mail student (@e-uvt.ro)</strong></td><td>` + data.username + `</td></tr>`);

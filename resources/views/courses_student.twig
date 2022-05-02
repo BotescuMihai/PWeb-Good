@@ -82,7 +82,21 @@
                             }
                             var html = '<tr>';
                             for (var i = 0; i < data.length; i++) {
-                                html += `<td><a class="btn btn-primary btn-lg btn-block" href="http://localhost:8888/myslimsite/public/student/courses/` + data[i]['id'] + `/grades">` + data[i]['denumire'] + `</a>` + `<a class="btn btn-outline-warning btn-lg btn-block" href="http://localhost:8888/myslimsite/public/teacher/subjects/` + data[i]['id'] + `"> Informatii legate de materie</a></td>`;
+                                //html += `<td><a class="btn btn-primary btn-lg btn-block" href="http://localhost:8888/myslimsite/public/student/courses/` + data[i]['id'] + `/grades">` + data[i]['denumire'] + `</a>` + `<a class="btn btn-outline-warning btn-lg btn-block" href="http://localhost:8888/myslimsite/public/teacher/subjects/` + data[i]['id'] + `"> Informatii legate de materie</a></td>`;
+                                html += `<tr><td><div class="accordion" id="accordionExample">
+  <div class="accordion-item">
+    <h2 class="accordion-header" id="headingOne">
+      <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+        ` + data[i]['denumire'] + `
+      </button>
+    </h2>
+    <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#accordionExample">
+      <div class="accordion-body">
+        <strong>Vizualizare informatii</strong> <br> Pentru a vizualiza informatii legate de materie, accesati butonul de mai jos <br>
+        <a class="btn btn-primary btn-lg btn-block" href="http://localhost:8888/myslimsite/public/student/courses/` + data[i]['id'] + `/grades">Vizualizare situatie curenta` + `</a>` + `<br><a class="btn btn-outline-warning btn-lg btn-block" href="http://localhost:8888/myslimsite/public/teacher/subjects/` + data[i]['id'] + `"> Informatii legate de materie</a></td></tr>
+      </div>
+    </div>
+  </div>`;
                             }
                             html += `</tr>`;
                             $('#email').html(data[0]['email']);
@@ -173,7 +187,7 @@
             </li>
         </ul>
 </nav>
-<div class="card text-white bg-info mb-3" style="max-width: 18rem;">
+<div class="card text-white bg-primary mb-3" style="width: 100%;">
     <div class="card-header">Bine ati revenit</div>
     <div class="card-body">
         <h5 class="card-title">Informatii utilizator curent</h5>
@@ -207,7 +221,7 @@
 <h2></h2>
 </div>
 </div>
-<h4>Selectati materia frecventata...</h4>
+<p class="h4">Selectati materia frecventata...</p>
 <div class="row gy-4 mt-5 justify-content-center" data-aos="zoom-in" data-aos-delay="250">
     <table>
         <tbody>

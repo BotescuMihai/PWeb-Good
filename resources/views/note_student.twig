@@ -157,7 +157,7 @@
 <i class="bi bi-exclamation-triangle"></i><strong>Nota finala:</strong> ` + data['ponderi']['curs'].toString() + `% <strong>nota de la curs </strong>; ` + data['ponderi']['seminar_laborator'].toString() + `% <strong>nota de la seminar/laborator</strong></td></tr>`;
 
                         // buton pt prezente
-                        $('body').append(`<td><a class="btn btn-primary btn-lg btn-block" href="http://localhost:8888/myslimsite/public/student/materii/` + {{ ID_m }} +`/prezente">` + `Vezi prezente</a>`);
+                        $('body').append(`<td><a class="btn btn-primary btn-lg btn-block" href="http://localhost:8888/myslimsite/public/student/courses/` + {{ ID_m }} +`/attendance">` + `Vezi prezente</a>`);
                         //<td><pre>` +  data.nota_curs + ` </pre></td>`;
 
                         $('#table_final').html(htmlContentfinal);

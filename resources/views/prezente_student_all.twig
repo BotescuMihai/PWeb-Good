@@ -63,7 +63,11 @@
                         success: function (data) {
                             console.log(data);
                             if (data['Error'] != null && data['Error'] != undefined) {
-                                $('body').html('Eroare! Nu aveti prezente inregistrate!');
+                                $('body').html(`<div class="alert alert-danger alert-dismissible d-flex align-items-center fade show">
+    <i class="bi-exclamation-octagon-fill"></i>
+    <strong class="mx-2">Eroare!</strong> Continut indisponibil <br> Nu aveti prezente inregistrate!
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>`);
                                 return;
                             }
                             $('#materie').html(data[0]['materie']);
