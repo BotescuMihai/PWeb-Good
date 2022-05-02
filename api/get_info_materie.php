@@ -2,7 +2,7 @@
 session_start();
 include 'grades_classification.php';
 include 'db.php';
-$DB = new db();
+
 
 function getStudentiInscrisi($DB)
 {
@@ -54,12 +54,14 @@ function getMaterie($DB)
     }
 }
 
-
-if (!isset($_SESSION['profesor_ID_m'])) {
-    echo '<h1>Error!</h1><h3>Not found</h3>';
-    die();
+function get_info_materie()
+{
+    $DB = new db();
+    if (!isset($_SESSION['profesor_ID_m'])) {
+        echo '<h1>Error!</h1><h3>Not found</h3>';
+        die();
+    }
+    $arr = array('inscrisi' => getStudentiInscrisi($DB)['nr_inscrisi'], 'titular' => getTitularCurs($DB)['prof_titular'], 'materie' => getMaterie($DB)['materie']);
+    return json_encode($arr);
 }
-$arr = array('inscrisi' => getStudentiInscrisi($DB)['nr_inscrisi'], 'titular' => getTitularCurs($DB)['prof_titular'], 'materie' => getMaterie($DB)['materie']);
-echo json_encode($arr);
-
 ?>

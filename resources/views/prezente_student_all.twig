@@ -58,10 +58,14 @@
             function fetch_students() {
                 $.ajax(
                     {
-                        url: "http://localhost:8888/myslimsite/api/student_prezente_all.php",
+                        url: "http://localhost:8888/myslimsite/public/student/materii/"+{{ ID_m }}+ "/prezente",
                         dataType: 'JSON',
                         success: function (data) {
                             console.log(data);
+                            if (data['Error'] != null && data['Error'] != undefined) {
+                                $('body').html('Eroare! Nu aveti prezente inregistrate!');
+                                return;
+                            }
                             $('#materie').html(data[0]['materie']);
                             $('#info_generale').html(`<tr><td><strong>E-mail</strong></td><td>` + data[0]['username'] + `</td></tr>`);
                             $('#table_curs').html(`<tr><td><strong>Prezente curs</strong></td><td>` + data[0]['numar'] + `</td></tr>`);

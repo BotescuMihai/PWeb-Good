@@ -69,7 +69,7 @@
             function fetch_materii() {
                 $.ajax(
                     {
-                        url: "http://localhost:8888/myslimsite/api/materii_profesor.php",
+                        url: "http://localhost:8888/myslimsite/public/profesor/materii",
                         dataType: 'JSON',
                         success: function (data) {
                             console.log(data);
@@ -81,7 +81,7 @@
                             }
                             var html = '<tr>';
                             for (var i = 0; i < data.length; i++) {
-                                html += `<td><a class="btn btn-primary btn-lg btn-block" href="http://localhost:8888/myslimsite/public/profesor/materii/` + data[i]['id'] + `/studenti/note">` + data[i]['denumire'] + `</a>` + `<a class="btn btn-outline-warning btn-lg btn-block" href="http://localhost:8888/myslimsite/public/profesor/materii/` + data[i]['id'] + `"> Informatii legate de materie</a></td>`;
+                                html += `<td><a class="btn btn-primary btn-lg btn-block" href="http://localhost:8888/myslimsite/public/teacher/courses/` + data[i]['id'] + `/students">` + data[i]['denumire'] + `</a>` + `<a class="btn btn-outline-warning btn-lg btn-block" href="http://localhost:8888/myslimsite/public/profesor/materii/` + data[i]['id'] + `"> Informatii legate de materie</a></td>`;
                             }
                             html += `</tr>`;
                             $('#email').html(data[0]['email']);

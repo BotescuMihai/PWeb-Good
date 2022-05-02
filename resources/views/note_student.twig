@@ -56,7 +56,7 @@
             function fetch_data() {
                 //  alert('am primit date...');
                 $.ajax({
-                    url: "http://localhost:8888/myslimsite/api/situatie_student.php",
+                    url: "http://localhost:8888/myslimsite/public/student/materii/" + {{ ID_m }} +"/note",
                     dataType: 'JSON',
                     success: function (data) {
                         console.log(data);
@@ -128,7 +128,7 @@
 <i class="bi bi-exclamation-triangle"></i>    <strong class="mx-2">Atentie</strong> Profesorul nu a stabilit inca modul de calcul al notei finale! Incercati mai tarziu!
     </div></td></tr>`;
                             // buton pt prezente
-                            $('body').append(`<td><a class="btn btn-primary btn-lg btn-block" href="http://localhost:8888/myslimsite/public/student/materii/` + data.id_materie + `/prezente">` + `Vezi prezente</a>`);
+                            $('body').append(`<td><a class="btn btn-primary btn-lg btn-block" href="http://localhost:8888/myslimsite/public/student/courses/` + data.id_materie + `/attendance">` + `Vezi prezente</a>`);
                             //<td><pre>` +  data.nota_curs + ` </pre></td>`;
 
                             $('#table_final').html(htmlContentfinal);
@@ -157,7 +157,7 @@
 <i class="bi bi-exclamation-triangle"></i><strong>Nota finala:</strong> ` + data['ponderi']['curs'].toString() + `% <strong>nota de la curs </strong>; ` + data['ponderi']['seminar_laborator'].toString() + `% <strong>nota de la seminar/laborator</strong></td></tr>`;
 
                         // buton pt prezente
-                        $('body').append(`<td><a class="btn btn-primary btn-lg btn-block" href="http://localhost:8888/myslimsite/public/student/materii/` + data.id_materie + `/prezente">` + `Vezi prezente</a>`);
+                        $('body').append(`<td><a class="btn btn-primary btn-lg btn-block" href="http://localhost:8888/myslimsite/public/student/materii/` + {{ ID_m }} +`/prezente">` + `Vezi prezente</a>`);
                         //<td><pre>` +  data.nota_curs + ` </pre></td>`;
 
                         $('#table_final').html(htmlContentfinal);

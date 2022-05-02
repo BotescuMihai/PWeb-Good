@@ -54,7 +54,7 @@
             function fetch_materie_info() {
                 $.ajax(
                     {
-                        url: "http://localhost:8888/myslimsite/api/get_info_materie.php",
+                        url: "http://localhost:8888/myslimsite/public/profesor/materii/" + {{ profesor_ID_m }},
                         dataType: 'JSON',
                         success: function (data) {
                             console.log(data);

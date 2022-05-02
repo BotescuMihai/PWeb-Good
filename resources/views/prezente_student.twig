@@ -58,7 +58,7 @@
             function fetch_students() {
                 $.ajax(
                     {
-                        url: "http://localhost:8888/myslimsite/api/student_get_prezente.php",
+                        url: "http://localhost:8888/myslimsite/public/profesor/materii/" + {{ ID_m }} +"/studenti/" + {{ student_ID }} +"/prezente/" + {{ tip }},
                         dataType: 'JSON',
                         success: function (data) {
                             var html = '';

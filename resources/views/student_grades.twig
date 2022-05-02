@@ -58,14 +58,14 @@
             function fetch_students() {
                 $.ajax(
                     {
-                        url: "http://localhost:8888/myslimsite/api/get_all_students.php",
+                        url: "http://localhost:8888/myslimsite/public/profesor/materii/" + {{ ID_m }} +"/studenti",
                         dataType: 'JSON',
                         success: function (data) {
                             console.log(data);
                             var html = '';
                             // alert(data);
                             for (var i = 0; i < data.length; i++) {
-                                html += "<a class='dropdown-item' href='http://localhost:8888/myslimsite/public/profesor/materii/" + data[i]['id_m'] + "/studenti/" + data[i]['id'] + "/note'>[" + data[i]['id'] + "] -- " + data[i]['username'] + "</a>";
+                                html += "<a class='dropdown-item' href='http://localhost:8888/myslimsite/public/teacher/courses/" + data[i]['id_m'] + "/students/" + data[i]['id'] + "/grades'>[" + data[i]['id'] + "] -- " + data[i]['username'] + "</a>";
                             }
                             $('#studenti_menu').html(html);
                         },
