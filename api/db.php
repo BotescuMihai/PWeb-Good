@@ -28,6 +28,11 @@ class db
         return $dbConn;
     }
 
+    public function getPDOConn()
+    {
+        return connect();
+    }
+
     public function execute_SELECT($query)
     {
         $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);

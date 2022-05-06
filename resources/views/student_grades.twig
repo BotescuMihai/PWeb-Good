@@ -56,18 +56,110 @@
 
         var id = 0;
 
-        function onclickID(ID) {
-            id = ID;
+        function func(data) {
+            var send_data = data['tip_nota'];
+            var datas = data['denumire_nota'].split(' ');
+            var send_data_2 = '';
+            for (var i = 0; i < datas.length - 1; i++) {
+                send_data_2 += datas[i] + '_';
+            }
+            send_data_2 += datas[i];
+            var nota_ID = send_data + '_' + send_data_2;
+            $(document).ready(function (e) {
+                e.preventDefault();
+                $.ajax({
+                    url: "http://localhost:8888/myslimsite/public/profesor/materii/" + {{ ID_m }} +"/note/" + nota_ID,
+                    type: "PUT",
+                    data: {
+                        'valoare': data['valoare'],
+                        'pondere': data['pondere'],
+                        'id': nota_ID,
+                    },
+                    success: function (data) {
+                        console.log('PUT ' + "http://localhost:8888/myslimsite/public/profesor/materii/" + {{ ID_m }} +"/note/" + nota_ID);
+                        console.log('\nSUCCESS!\n');
+                        console.log('Data:\n');
+                        console.log(data);
+                    },
+                    error: function (xhr, status, error) {
+                        console.log('It failed!\n');
+                        console.log(xhr + '\n' + status + '\n' + error);
+                    }
+                });
+            });
+
         }
 
+        $('#sterg_nota').submit(function (e) {
+            e.preventDefault();
+            var denumire_nota_sterg = $('#denumire_nota_sterg').val();
+            var tip_nota_sterg = $('#tip_nota_sterg').val();
+            var datas = denumire_nota_sterg.split(' ');
+            var data = tip_nota_sterg;
+            for (var i = 0; i < datas.length; i++)
+                data += '_' + datas[i];
+            console.log(data);
+            $.ajax(
+                {
+                    type: 'DELETE',
+                    url: "http://localhost:8888/myslimsite/public/profesor/materii/" + {{ ID_m }} +"/note/" + data,
+                    data: data,
+                    success: function () {
+                        console.log('DELETE ' + "http://localhost:8888/myslimsite/public/profesor/materii/" + {{ ID_m }} +"/note/" + data);
+                        console.log('\nSUCCESS!\n');
+                    },
+                    error: function (xhr, status, error) {
+                        console.log('It failed!\n');
+                        console.log(xhr + '\n' + status + '\n' + error);
+                    }
+                }
+            );
+        });
+
         function add_nota_curs() {
-            $('#table_curs').append(`<tr><td contenteditable="true">Testt</td><td contenteditable="true"></td></tr>`);
+            $('#table_curs').append(`<tr><td contenteditable="true"></td><td contenteditable="true">`);
         }
 
         function add_nota_seminar_laborator() {
             $('#table_seminar_lab').append(`<tr><td contenteditable="true"></td><td contenteditable="true"></td></tr>`);
         }
 
+
+        $(document).ready(function () {
+            $('#add_nota').submit(function (e) {
+                e.preventDefault();
+                var tip_nota = $('#tip_nota').val();
+                if (tip_nota == 'Curs') {
+                    tip_nota = 'curs';
+                } else tip_nota = 'seminar_laborator';
+                var den_nota = $('#denumire_nota').val();
+                var denumire_nota = '';
+                var den_note = den_nota.split(' ');
+                for (var i = 0; i < den_note.length - 1; i++) {
+                    denumire_nota += den_note[i] + '_';
+                }
+                denumire_nota += den_note[i];
+                $.ajax(
+                    {
+                        url: "http://localhost:8888/myslimsite/public/profesor/materii/" + {{ ID_m }} +"/studenti/note",
+                        type: "POST",
+                        data: {
+                            'nota': tip_nota + '_' + denumire_nota,
+                        },
+                        success: function (data) {
+                            console.log('POST /profesor/materii/' + {{ ID_m }} +'/studenti/note\n');
+                            console.log('Data:\n');
+                            console.log(data);
+                            console.log('\nSuccess!\n');
+                        },
+                        error: function (xhr, status, error) {
+                            console.log('It failed!');
+                            console.log(xhr.responseText + '\n' + status + '\n' + error);
+                        }
+                    }
+                );
+            });
+        });
 
         $(document).ready(function () {
             function fetch_students() {
@@ -80,7 +172,7 @@
                             var html = '';
                             // alert(data);
                             for (var i = 0; i < data.length; i++) {
-                                html += "<a class='dropdown-item' onclick='onclickID(' + data[i]['id'] + ')' href='http://localhost:8888/myslimsite/public/teacher/courses/" + data[i]['id_m'] + "/students/" + data[i]['id'] + "/grades'>[" + data[i]['id'] + "] -- " + data[i]['username'] + "</a>";
+                                html += "<a class='dropdown-item'  href='http://localhost:8888/myslimsite/public/teacher/courses/" + data[i]['id_m'] + "/students/" + data[i]['id'] + "/grades'>[" + data[i]['id'] + "] -- " + data[i]['username'] + "</a>";
                             }
                             $('#studenti_menu').html(html);
                         },
@@ -114,9 +206,10 @@
                         var note = data.note;
                         $('#info_generale').html(htmlInitiale);
                         $('#materie').html(data.materie);
+                        var html_curs_opt = '', html_seminar_laborator_opt = '';
                         for (var i = 0; i < note.length; i++) {
                             if (note[i]['tip_nota'] == 'curs') {
-                                htmlCurs += '<tr><td  contenteditable="true"><strong>' + note[i]['denumire_nota'] + '</strong></td><td  contenteditable="true">' + note[i]['valoare'] + '</td><td contenteditable="true">' + note[i]['pondere'] + '%</td></tr>';
+                                htmlCurs += '<tr><td  contenteditable="true"><strong>' + note[i]['denumire_nota'] + '</strong></td><td  contenteditable="true">' + note[i]['valoare'] + '</td><td contenteditable="true">' + note[i]['pondere'] + `%</td></tr>`;
                             } else if (note[i]['tip_nota'] == 'seminar' || note[i]['tip_nota'] == 'laborator') {
                                 htmlSeminarLab += '<tr><td contenteditable="true"><strong>' + note[i]['denumire_nota'] + '</strong></td><td  contenteditable="true">' + note[i]['valoare'] + '</td><td contenteditable="true">' + note[i]['pondere'] + '%</td></tr>';
                             }
@@ -133,8 +226,8 @@
                         if (data.final_curs >= 5 && data.final_seminar_lab >= 5)
                             htmlFinal += pass;
                         else htmlFinal += fail;
-                        htmlCurs += `<td><button class="btn btn-primary btn-lg btn-block onclick='add_nota_curs()'">Adauga nota</button>`;
-                        htmlSeminarLab += `<td><button class="btn btn-primary btn-lg btn-block onclick='add_nota_seminar_laborator()'">Adauga nota</button>`;
+                        //   htmlCurs += `<td><button class="btn btn-primary btn-lg btn-block" onclick="add_nota_curs()">Adauga nota</button>`;
+                        //   htmlSeminarLab += `<td><button class="btn btn-primary btn-lg btn-block" onclick='add_nota_seminar_laborator()'>Adauga nota</button>`;
                         $('#table_curs').html(htmlCurs);
                         $('#table_seminar_lab').html(htmlSeminarLab);
                         $('#table_final').html(htmlFinal);
@@ -361,6 +454,44 @@
         </div>
         <div class="alert alert-info">
             <p id="email"></p></a>
+        </div>
+        <div class="alert alert-warning">
+            <strong>Pentru a adauga un anumit tip de nota pentru toti studentii acestei materii</strong> <br>
+            Completati mai jos informatiile necesare
+            <br>
+            <form id="add_nota">
+                <div class="form-group">
+                    <label for="exampleFormControlInput1">Introduceti denumirea notei dorite...</label>
+                    <input type="text" class="form-control" id="denumire_nota">
+                </div>
+                <div class="form-group">
+                    <label for="exampleFormControlSelect1">Selectati tipul notei...</label>
+                    <select class="form-control" id="tip_nota">
+                        <option>Curs</option>
+                        <option>Seminar/laborator</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-warning mb-2">Adaugati</button>
+            </form>
+        </div>
+        <div class="alert alert-danger">
+            <strong>Pentru a sterge un anumit tip de nota pentru toti studentii acestei materii</strong> <br>
+            Completati mai jos informatiile necesare
+            <br>
+            <form id="sterg_nota">
+                <div class="form-group">
+                    <label for="exampleFormControlInput1">Introduceti denumirea notei dorite...</label>
+                    <input type="text" class="form-control" id="denumire_nota_sterg">
+                </div>
+                <div class="form-group">
+                    <label for="exampleFormControlSelect1">Selectati tipul notei...</label>
+                    <select class="form-control" id="tip_nota_sterg">
+                        <option>Curs</option>
+                        <option>Seminar/laborator</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-danger mb-2">Stergeti</button>
+            </form>
         </div>
         <!--
             <div class="alert alert-warning">

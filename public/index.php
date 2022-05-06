@@ -79,27 +79,26 @@ $app->get('/student/materii', function (Request $request, Response $response) {
     $payload = array();
     if (!isset($_SESSION['email'])) {
         $arr = array('error' => 'You must be logged in !');
-        $payload = $arr;
-        //   echo $payload;
-    }
-    $query = "SELECT materie.id, denumire from materie
+        echo json_encode($arr);
+    } else {
+        $query = "SELECT materie.id, denumire from materie
 INNER JOIN student ON materie.id = student.materie_ID
 WHERE student.username ='" . $_SESSION['email'] . "'";
-    $stmt = $DB->execute_SELECT($query);
-    $materii = array();
-    if (count($stmt) == 0) {
-        $arr = array('Error' => 'No Records found!', 'email' => $_SESSION['email']);
-        $payload = $arr;
+        $stmt = $DB->execute_SELECT($query);
+        $materii = array();
+        if (count($stmt) == 0) {
+            $arr = array('Error' => 'No Records found!', 'email' => $_SESSION['email']);
+            $payload = $arr;
 //        echo $payload;
-    } else {
-        foreach ($stmt as $row) {
-            $materii[] = array('id' => $row['id'], 'denumire' => $row['denumire'], 'email' => $_SESSION['email']);
+        } else {
+            foreach ($stmt as $row) {
+                $materii[] = array('id' => $row['id'], 'denumire' => $row['denumire'], 'email' => $_SESSION['email']);
+            }
+            $payload = $materii;
+            //   echo $payload;
         }
-        $payload = $materii;
-        //   echo $payload;
+        echo json_encode($payload);
     }
-    echo json_encode($payload);
-
 });
 
 $app->get('/student/courses', function (Request $request, Response $response) {
@@ -111,6 +110,9 @@ $app->get('/student/materii/{ID_m}/note', function (Request $req, Response $resp
     $DB = new db();
     if (!isset($_SESSION['ID_m'])) {
         return json_encode(array('Error' => 'Not found'));
+    }
+    if (!isset($_SESSION['email'])) {
+        return json_encode(array('Error' => 'You must be logged in!'));
     }
     $query = "SELECT * FROM note
 INNER JOIN student
@@ -185,12 +187,15 @@ $app->get('/teacher/subjects/{ID_m}', function (Request $request, Response $resp
 
 $app->get('/profesor/materii/{ID_m}', function (Request $request, Response $response, $args) {
     $DB = new db();
-    if (!isset($_SESSION['profesor_ID_m'])) {
-        echo json_encode(array('Error' => 'Not found'));
-        die();
-    }
-    $arr = array('inscrisi' => getStudentiInscrisi($DB)['nr_inscrisi'], 'titular' => getTitularCurs($DB)['prof_titular'], 'materie' => getMaterie($DB)['materie']);
-    echo json_encode($arr);
+    $ID_m = $args['ID_m'];
+    $arr = array('inscrisi' => getStudentiInscrisi($DB, $ID_m)['nr_inscrisi'], 'titular' => getTitularCurs($DB, $ID_m)['prof_titular'], 'materie' => getMaterie($DB, $ID_m)['materie']);
+    if ($arr['inscrisi'] == null && $arr['titular'] == null && $arr['materie'] == null) {
+        echo json_encode(array('Error' => 'No records found!'));
+    } else if ($arr['inscrisi'] == null) {
+        $arr['inscrisi'] = 0;
+        echo json_encode($arr);
+    } else
+        echo json_encode($arr);
 });
 
 //////
@@ -312,9 +317,11 @@ $app->get('/', function ($request, $response) {
 $app->post('/', function (Request $request, Response $response, array $args) {
     $router = $this->router;
     $_SESSION['email'] = $_POST['email'];
-    if (profesor($_SESSION['email'])) {
-        return $response->withRedirect($router->pathFor('profesor-login'));
-    } else return $response->withRedirect($router->pathFor('student-login'));
+    //$_SESSION['email'] = $_POST['email'];
+    if (profesor($_POST['email'])) {
+        return $response->withRedirect($router->pathFor('profesor-login'))->withAddedHeader('email', $_POST['email']);
+    } else         return $response->withRedirect($router->pathFor('student-login'))->withAddedHeader('email', $_POST['email']);
+
 });
 
 $app->get('/student', function (Request $request, Response $response, array $args) {
@@ -396,10 +403,68 @@ WHERE prezenta.materie_id = " . $args['ID_m'] . " AND student.username='" . $_SE
 });
 
 
+///////////// POST
+
+
+$app->post('/profesor/materii/{ID_m}/studenti/note', function (Request $request, Response $response, array $args) {
+    $ID_m = $args['ID_m'];
+    $nota = $_REQUEST['nota'];
+    $db = new db();
+    $stmt = $db->execute_SELECT("SELECT student.username, student.id
+    FROM student
+    INNER JOIN materie ON materie.id = student.materie_ID
+    WHERE student.materie_ID=" . $ID_m);
+    if (count($stmt) == 0) {
+        echo json_encode(array('Eroare' => 'Nu aveti studenti inscrisi la materia Dvs.!'));
+        die();
+    } else {
+        $studenti = array();
+        foreach ($stmt as $row) {
+            $studenti[] = $row['id'];
+        }
+        echo json_encode($studenti);
+        $db = new db();
+        $stmt = $db->execute_SELECT("SELECT id FROM note ORDER BY id DESC");
+        $id = 0;
+        foreach ($stmt as $row) {
+            $id = $row['id'] + 1;
+            break;
+        }
+        $pdo = new PDO("mysql:host=localhost;dbname=proiectpw", "root", "root");
+        $stmt = $pdo->prepare("INSERT INTO note(id, materie_id, student_id, tip_nota, valoare, pondere)  VALUES (:id, :materie_id, :student_id, :tip_nota, :valoare, :pondere)");
+        foreach ($studenti as $student) {
+            $stmt->execute(array(':id' => $id, ':materie_id' => $ID_m, ':student_id' => $student, ':tip_nota' => $nota, ':valoare' => 0, ':pondere' => 0));
+            $id++;
+        }
+    }
+});
+
+
+/////////////////////// PUT
+
+$app->put('/profesor/materii/{ID_m}/note/{nota_ID}', function (Request $request, Response $response, array $args) {
+    $ID_m = $args['ID_m'];
+    $nota_ID = $args['nota_ID'];
+    $pdo = new PDO("mysql:host=localhost;dbname=proiectpw", "root", "root");
+    $stmt = $pdo->prepare("UPDATE note SET id=(:id) WHERE id=" . $nota_ID . " AND materie_id=" . $ID_m);
+});
+
+
+///////////////////// DELETE
+
+$app->delete('/profesor/materii/{ID_m}/note/{nota_ID}', function (Request $request, Response $response, array $args) {
+    $ID_m = $args['ID_m'];
+    $nota_ID = $args['nota_ID'];
+    $pdo = new PDO("mysql:host=localhost;dbname=proiectpw", "root", "root");
+    $stmt = $pdo->prepare("DELETE FROM note WHERE materie_id=:mid AND tip_nota=:idd");
+    $stmt->execute(array(':mid' => $ID_m, ':idd' => $nota_ID));
+});
+
+
 //////////////// helper functions
-function getStudentiInscrisi($DB)
+function getStudentiInscrisi($DB, $ID_m)
 {
-    $query = "SELECT materie.id, COUNT(DISTINCT(student.id)) AS numar FROM note INNER JOIN student ON note.student_id = student.id INNER JOIN materie ON note.materie_id = materie.id GROUP BY materie.id HAVING materie.id = " . $_SESSION['profesor_ID_m'];
+    $query = "SELECT materie.id, COUNT(DISTINCT(student.id)) AS numar FROM note INNER JOIN student ON note.student_id = student.id INNER JOIN materie ON note.materie_id = materie.id GROUP BY materie.id HAVING materie.id = " . $ID_m;
     $stmt = $DB->execute_SELECT($query);
     if (count($stmt) == 0) {
         $arr = array('Error' => 'No Records found!');
@@ -413,11 +478,11 @@ function getStudentiInscrisi($DB)
     }
 }
 
-function getTitularCurs($DB)
+function getTitularCurs($DB, $ID_m)
 {
     $query = "SELECT profesor.username FROM profesor
 INNER JOIN materie on profesor.id = materie.profesor_id
-WHERE materie.id = " . $_SESSION['profesor_ID_m'];
+WHERE materie.id = " . $ID_m;
     $stmt = $DB->execute_SELECT($query);
     if (count($stmt) == 0) {
         $arr = array('Error' => 'No Records found!');
@@ -431,9 +496,9 @@ WHERE materie.id = " . $_SESSION['profesor_ID_m'];
     }
 }
 
-function getMaterie($DB)
+function getMaterie($DB, $ID_m)
 {
-    $query = "SELECT materie.denumire FROM materie WHERE materie.id = " . $_SESSION['profesor_ID_m'];
+    $query = "SELECT materie.denumire FROM materie WHERE materie.id = " . $ID_m;
     $stmt = $DB->execute_SELECT($query);
     if (count($stmt) == 0) {
         $arr = array('Error' => 'No Records found!');
