@@ -418,6 +418,11 @@ $app->post('/profesor/materii/{ID_m}/studenti/note', function (Request $request,
         echo json_encode(array('Eroare' => 'Nu aveti studenti inscrisi la materia Dvs.!'));
         die();
     } else {
+        $new_stmt = $db->execute_SELECT("SELECT note.tip_nota FROM note WHERE note.materie_id=" . $ID_m . " AND note.tip_nota='" . $nota . "'");
+        if (count($new_stmt) > 0) { // daca o nota exista deja, n-o mai adaug.
+            echo json_encode(array('Error' => 'Record already exists! It will not be added...'));
+            die();
+        }
         $studenti = array();
         foreach ($stmt as $row) {
             $studenti[] = $row['id'];
@@ -441,14 +446,14 @@ $app->post('/profesor/materii/{ID_m}/studenti/note', function (Request $request,
 
 
 /////////////////////// PUT
-
+/*
 $app->put('/profesor/materii/{ID_m}/note/{nota_ID}', function (Request $request, Response $response, array $args) {
     $ID_m = $args['ID_m'];
     $nota_ID = $args['nota_ID'];
     $pdo = new PDO("mysql:host=localhost;dbname=proiectpw", "root", "root");
     $stmt = $pdo->prepare("UPDATE note SET id=(:id) WHERE id=" . $nota_ID . " AND materie_id=" . $ID_m);
 });
-
+*/
 
 ///////////////////// DELETE
 

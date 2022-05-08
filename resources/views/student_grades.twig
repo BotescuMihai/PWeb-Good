@@ -90,21 +90,25 @@
 
         }
 
-        $('#sterg_nota').submit(function (e) {
-            e.preventDefault();
+        function sterge_nota() {
             var denumire_nota_sterg = $('#denumire_nota_sterg').val();
             var tip_nota_sterg = $('#tip_nota_sterg').val();
+            console.log(denumire_nota_sterg);
+            console.log(tip_nota_sterg);
+
             var datas = denumire_nota_sterg.split(' ');
             var data = tip_nota_sterg;
             for (var i = 0; i < datas.length; i++)
                 data += '_' + datas[i];
-            console.log(data);
+            // console.log(data);
+            /// alert(data);
+
             $.ajax(
                 {
-                    type: 'DELETE',
                     url: "http://localhost:8888/myslimsite/public/profesor/materii/" + {{ ID_m }} +"/note/" + data,
-                    data: data,
+                    type: "DELETE",
                     success: function () {
+                        alert('OK, am sters nota ' + data + ' de la toti studentii!');
                         console.log('DELETE ' + "http://localhost:8888/myslimsite/public/profesor/materii/" + {{ ID_m }} +"/note/" + data);
                         console.log('\nSUCCESS!\n');
                     },
@@ -114,7 +118,7 @@
                     }
                 }
             );
-        });
+        }
 
         function add_nota_curs() {
             $('#table_curs').append(`<tr><td contenteditable="true"></td><td contenteditable="true">`);
@@ -189,7 +193,6 @@
                     url: "http://localhost:8888/myslimsite/public/profesor/materii/" + {{ ID_m }} +"/studenti/" + {{ student_ID }} +"/note",
                     dataType: 'JSON',
                     success: function (data) {
-
                         if (data.Error != undefined && data.Error != null) {
                             $('body').html('<h1>Error!</h1><h3>No records found!</h3>');
                             return;
@@ -319,10 +322,10 @@
                     <a class="dropdown-item" href="#">Separated link</a> -->
                 </div>
             </div>
-
         </ul>
+    </div>
+    </ul>
 </nav>
-
 
 <div class="container">
 
@@ -474,26 +477,29 @@
                 <button type="submit" class="btn btn-warning mb-2">Adaugati</button>
             </form>
         </div>
-        <div class="alert alert-danger">
-            <strong>Pentru a sterge un anumit tip de nota pentru toti studentii acestei materii</strong> <br>
-            Completati mai jos informatiile necesare
-            <br>
-            <form id="sterg_nota">
-                <div class="form-group">
-                    <label for="exampleFormControlInput1">Introduceti denumirea notei dorite...</label>
-                    <input type="text" class="form-control" id="denumire_nota_sterg">
-                </div>
-                <div class="form-group">
-                    <label for="exampleFormControlSelect1">Selectati tipul notei...</label>
-                    <select class="form-control" id="tip_nota_sterg">
-                        <option>Curs</option>
-                        <option>Seminar/laborator</option>
-                    </select>
-                </div>
-                <button type="submit" class="btn btn-danger mb-2">Stergeti</button>
-            </form>
+    </div>
+</div>
+<div class="alert alert-danger">
+    <strong>Pentru a sterge un anumit tip de nota pentru toti studentii acestei materii</strong> <br>
+    Completati mai jos informatiile necesare
+    <br>
+    <form id="sterg_nota">
+        <div class="form-group">
+            <label for="exampleFormControlInput1">Introduceti denumirea notei dorite...</label>
+            <input type="text" class="form-control" id="denumire_nota_sterg">
         </div>
-        <!--
+        <div class="form-group">
+            <label for="exampleFormControlSelect1">Selectati tipul notei...</label>
+            <select class="form-control" id="tip_nota_sterg">
+                <option>Curs</option>
+                <option>Seminar/laborator</option>
+            </select>
+        </div>
+    </form>
+    <button class="btn btn-danger" id="sterge_nota" name="sterge_nota" onclick="sterge_nota();">Stergeti</button>
+</div>
+</div>
+<!--
             <div class="alert alert-warning">
                 <strong>Modalitatea de calcul a notei finale si a activitatii de pe parcurs</strong> <br>
                 <strong>La aceasta materie</strong>, nota finala se calculeaza astfel: 50% curs + 50% laborator. <br>
