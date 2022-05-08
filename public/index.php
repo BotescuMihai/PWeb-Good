@@ -421,7 +421,7 @@ $app->post('/profesor/materii/{ID_m}/studenti/note', function (Request $request,
         $new_stmt = $db->execute_SELECT("SELECT note.tip_nota FROM note WHERE note.materie_id=" . $ID_m . " AND note.tip_nota='" . $nota . "'");
         if (count($new_stmt) > 0) { // daca o nota exista deja, n-o mai adaug.
             echo json_encode(array('Error' => 'Record already exists! It will not be added...'));
-            die();
+            die();//
         }
         $studenti = array();
         foreach ($stmt as $row) {
