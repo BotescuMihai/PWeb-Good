@@ -138,7 +138,57 @@
             $('#table_seminar_lab').append(`<tr><td contenteditable="true"></td><td contenteditable="true"></td></tr>`);
         }
 
-
+        $(document).ready(function () {
+            $('#upd_nota_all').submit(function (e) {
+                e.preventDefault();
+                var tip_nota = $('#tip_nota_upd').val();
+                if (tip_nota == 'Curs') {
+                    tip_nota = 'curs';
+                } else tip_nota = 'seminar_laborator';
+                var den_nota = $('#denumire_nota_upd').val();
+                var denumire_nota = '';
+                var den_note = den_nota.split(' ');
+                for (var i = 0; i < den_note.length - 1; i++) {
+                    denumire_nota += den_note[i] + '_';
+                }
+                denumire_nota += den_note[i];
+                var dennota = '';
+                for (var i = 0; i < denumire_nota.length - 1; i++)
+                    dennota += denumire_nota[i];
+                denumire_nota = dennota;
+                var nota_nou = $('#noua_denumire_nota_upd').val();
+                var den_nota_nou = '';
+                var den_note_nou = nota_nou.split(' ');
+                for (var i = 0; i < den_note_nou.length - 1; i++) {
+                    den_nota_nou += den_note_nou[i] + '_';
+                }
+                den_nota_nou += den_note_nou[i];
+                /* var dennota='';
+                 for(var i=0;i<den_nota_nou.length-1;i++)
+                     dennota += den_nota_nou[i];
+                 den_nota_nou = dennota; */
+                $.ajax({
+                    url: "http://localhost:8888/myslimsite/public/profesor/materii/" + {{ ID_m }} +"/note/" + tip_nota + '_' + denumire_nota,
+                    type: "POST",
+                    data: {
+                        'nota': tip_nota + '_' + denumire_nota,
+                        'nota_nou': tip_nota + '_' + den_nota_nou,
+                        'pondere': $('#pondere_nota_upd').val(),
+                    },
+                    success: function (data) {
+                        console.log('POST /profesor/materii/' + {{ ID_m }} +'/note/' + tip_nota + '_' + denumire_nota);
+                        console.log('SUCCESS!');
+                        console.log(data);
+                    },
+                    error: function (xhr, status, error) {
+                        console.log('It failed!');
+                        console.log(xhr);
+                        console.log(status);
+                        console.log(error);
+                    }
+                });
+            });
+        });
         $(document).ready(function () {
             $('#add_nota').submit(function (e) {
                 e.preventDefault();
@@ -159,6 +209,7 @@
                         type: "POST",
                         data: {
                             'nota': tip_nota + '_' + denumire_nota,
+                            'pondere': $('#pondere_nota').val(),
                         },
                         success: function (data) {
                             console.log('POST /profesor/materii/' + {{ ID_m }} +'/studenti/note\n');
@@ -262,6 +313,13 @@
                 if ($('#tip_nota_sterg').val() == 'Curs') {
                     $('#denumire_nota_sterg').html(selectCurs);
                 } else $('#denumire_nota_sterg').html(selectSeminarLab);
+            });
+        });
+        $(document).ready(function () {
+            $('#tip_nota_upd').change(function () {
+                if ($('#tip_nota_upd').val() == 'Curs') {
+                    $('#denumire_nota_upd').html(selectCurs);
+                } else $('#denumire_nota_upd').html(selectSeminarLab);
             });
         });
     </script>
@@ -493,6 +551,10 @@
                         <option>Curs</option>
                         <option>Seminar/laborator</option>
                     </select>
+                    <div class="form-group">
+                        <label>Introduceti ponderea notei... </label>
+                        <input type="number" value="50" min="1" max="100" step="1" id="pondere_nota"/>
+                    </div>
                 </div>
                 <button type="submit" class="btn btn-outline-success mb-2">Adaugati</button>
             </form>
@@ -524,7 +586,79 @@
     <button class="btn btn-outline-danger" id="sterge_nota" name="sterge_nota" onclick="sterge_nota();">Stergeti
     </button>
 </div>
+
+<div class="alert alert-success">
+    <h4 class="alert-heading"><strong>Pentru a actualiza un anumit tip de nota pentru toti studentii acestei
+            materii</strong> <br></h4>
+    Completati mai jos informatiile necesare
+    <br>
+    <form id="upd_nota_all">
+        <div class="form-group">
+            <label for="exampleFormControlInput1">Introduceti denumirea notei dorite...</label>
+            <!-- <input type="text" class="form-control" id="denumire_nota_sterg"> -->
+            <select class="form-control" id="denumire_nota_upd">
+
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="exampleFormControlSelect1">Selectati tipul notei...</label>
+            <select class="form-control" id="tip_nota_upd">
+                <option>Selectati tipul...</option>
+                <option>Curs</option>
+                <option>Seminar/laborator</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="exampleFormControlInput1">Introduceti noua denumire...</label>
+            <input type="text" class="form-control" id="noua_denumire_nota_upd">
+        </div>
+        <div class="form-group">
+            <label>Introduceti ponderea notei... </label>
+            <input type="number" value="50" min="1" max="100" step="1" id="pondere_nota_upd"/>
+        </div>
+
+        <button type="submit" class="btn btn-outline-success" id="sterge_nota" name="sterge_nota">Actualizati
+        </button>
+    </form>
 </div>
+</div>
+
+<div class="alert alert-warning">
+    <h4 class="alert-heading"><strong>Pentru a actualiza un anumit tip de nota pentru toti studentii acestei
+            materii</strong> <br></h4>
+    Completati mai jos informatiile necesare
+    <br>
+    <form id="upd_nota_all">
+        <div class="form-group">
+            <label for="exampleFormControlInput1">Introduceti denumirea notei dorite...</label>
+            <!-- <input type="text" class="form-control" id="denumire_nota_sterg"> -->
+            <select class="form-control" id="denumire_nota_upd">
+
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="exampleFormControlSelect1">Selectati tipul notei...</label>
+            <select class="form-control" id="tip_nota_upd">
+                <option>Selectati tipul...</option>
+                <option>Curs</option>
+                <option>Seminar/laborator</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="exampleFormControlInput1">Introduceti noua denumire...</label>
+            <input type="text" class="form-control" id="noua_denumire_nota_upd">
+        </div>
+        <div class="form-group">
+            <label>Introduceti ponderea notei... </label>
+            <input type="number" value="50" min="1" max="100" step="1" id="pondere_nota_upd"/>
+        </div>
+
+        <button type="submit" class="btn btn-outline-success" id="sterge_nota" name="sterge_nota">Actualizati
+        </button>
+    </form>
+</div>
+</div>
+
 <!--
             <div class="alert alert-warning">
                 <strong>Modalitatea de calcul a notei finale si a activitatii de pe parcurs</strong> <br>

@@ -221,8 +221,19 @@ $app->get('/profesor/materii/{ID_m}/studenti', function ($request, $response, $a
     } else {
         $materie = '';
         $uname = '';
+        $unames = array();
+
         foreach ($stmt as $row) {
+            $flag = 0;
+            if (count($unames) > 0)
+                foreach ($unames as $uname) {
+                    if ($uname == $row['username'])
+                        $flag = 1;
+                }
+            if ($flag == 1)
+                break;
             $studenti[] = array('id' => $row['id'], 'username' => $row['username'], 'id_m' => $row['idm']);
+            $unames[] = $row['username'];
         }
         echo json_encode($studenti);
     }
@@ -409,6 +420,7 @@ WHERE prezenta.materie_id = " . $args['ID_m'] . " AND student.username='" . $_SE
 $app->post('/profesor/materii/{ID_m}/studenti/note', function (Request $request, Response $response, array $args) {
     $ID_m = $args['ID_m'];
     $nota = $_REQUEST['nota'];
+    $pondere = $_REQUEST['pondere'];
     $db = new db();
     $stmt = $db->execute_SELECT("SELECT student.username, student.id
     FROM student
@@ -438,9 +450,34 @@ $app->post('/profesor/materii/{ID_m}/studenti/note', function (Request $request,
         $pdo = new PDO("mysql:host=localhost;dbname=proiectpw", "root", "root");
         $stmt = $pdo->prepare("INSERT INTO note(id, materie_id, student_id, tip_nota, valoare, pondere)  VALUES (:id, :materie_id, :student_id, :tip_nota, :valoare, :pondere)");
         foreach ($studenti as $student) {
-            $stmt->execute(array(':id' => $id, ':materie_id' => $ID_m, ':student_id' => $student, ':tip_nota' => $nota, ':valoare' => 0, ':pondere' => 0));
+            $stmt->execute(array(':id' => $id, ':materie_id' => $ID_m, ':student_id' => $student, ':tip_nota' => $nota, ':valoare' => 0, ':pondere' => $pondere));
             $id++;
         }
+    }
+});
+
+$app->post('/profesor/materii/{ID_m}/note/{nota_ID}', function (Request $request, Response $response, array $args) {
+    $idm = $args['ID_m'];
+    $nota_id = $args['nota_ID'];
+    $new_nota = $_REQUEST['nota_nou'];
+    $pondere = $_REQUEST['pondere'];
+    $db = new db();
+    $stmt = $db->execute_SELECT("SELECT student.username, student.id
+    FROM student
+    INNER JOIN materie ON materie.id = student.materie_ID
+    WHERE student.materie_ID=" . $idm);
+    if (count($stmt) == 0) {
+        echo json_encode(array('Eroare' => 'Nu aveti studenti inscrisi la materia Dvs.!'));
+        die();
+    } else {
+        $new_stmt = $db->execute_SELECT("SELECT note.tip_nota FROM note WHERE note.materie_id=" . $idm . " AND note.tip_nota='" . $new_nota . "'");
+        if (count($new_stmt) > 0) { // daca o nota exista deja, n-o mai adaug.
+            echo json_encode(array('Error' => 'Record already exists! It will not be added...'));
+            die();//
+        }
+        $pdo = new PDO("mysql:host=localhost;dbname=proiectpw", "root", "root");
+        $stmt = $pdo->prepare("UPDATE note SET tip_nota=(:nota_nou), pondere=(:pondere) WHERE tip_nota=(:nota_id) AND materie_id=(:materie_id)");
+        $stmt->execute(array(':nota_nou' => $new_nota, ':pondere' => $pondere, ':nota_id' => $nota_id, ':materie_id' => $idm));
     }
 });
 
