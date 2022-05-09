@@ -53,8 +53,9 @@
     <!-- <a class="dropdown-item" href="#">Action</a> -->
 
     <script type="text/javascript">
-
+        var selectCurs = '', selectSeminarLab = '';
         var id = 0;
+
 
         function func(data) {
             var send_data = data['tip_nota'];
@@ -93,14 +94,23 @@
         function sterge_nota() {
             var denumire_nota_sterg = $('#denumire_nota_sterg').val();
             var tip_nota_sterg = $('#tip_nota_sterg').val();
+            if (tip_nota_sterg == 'Curs') tip_nota_sterg = 'curs';
+            else tip_nota_sterg = 'seminar_laborator';
             console.log(denumire_nota_sterg);
             console.log(tip_nota_sterg);
 
             var datas = denumire_nota_sterg.split(' ');
-            var data = tip_nota_sterg;
+            var data = tip_nota_sterg + '_';
             for (var i = 0; i < datas.length; i++)
-                data += '_' + datas[i];
-            // console.log(data);
+                data += datas[i] + '_';
+            var findata = '';
+            for (var i = 0; i < data.length - 2; i++)
+                findata += data[i];
+            data = findata;
+            //    data[data.length-1]='';
+            //  data[data.length]='';
+            //   data += datas[i];
+            console.log(data);
             /// alert(data);
 
             $.ajax(
@@ -213,8 +223,10 @@
                         for (var i = 0; i < note.length; i++) {
                             if (note[i]['tip_nota'] == 'curs') {
                                 htmlCurs += '<tr><td  contenteditable="true"><strong>' + note[i]['denumire_nota'] + '</strong></td><td  contenteditable="true">' + note[i]['valoare'] + '</td><td contenteditable="true">' + note[i]['pondere'] + `%</td></tr>`;
+                                selectCurs += `<option value='` + note[i]['denumire_nota'] + `'>` + note[i]['denumire_nota'] + `</option>`;
                             } else if (note[i]['tip_nota'] == 'seminar' || note[i]['tip_nota'] == 'laborator') {
                                 htmlSeminarLab += '<tr><td contenteditable="true"><strong>' + note[i]['denumire_nota'] + '</strong></td><td  contenteditable="true">' + note[i]['valoare'] + '</td><td contenteditable="true">' + note[i]['pondere'] + '%</td></tr>';
+                                selectSeminarLab += `<option value='` + note[i]['denumire_nota'] + `'>` + note[i]['denumire_nota'] + `</option>`;
                             }
                         }
                         htmlFinal = '<tr><td><strong>Curs</strong><td>' + data.final_curs + '</td>';
@@ -244,6 +256,13 @@
 
             fetch_data();
             fetch_students();
+        });
+        $(document).ready(function () {
+            $('#tip_nota_sterg').change(function () {
+                if ($('#tip_nota_sterg').val() == 'Curs') {
+                    $('#denumire_nota_sterg').html(selectCurs);
+                } else $('#denumire_nota_sterg').html(selectSeminarLab);
+            });
         });
     </script>
 
@@ -458,8 +477,9 @@
         <div class="alert alert-info">
             <p id="email"></p></a>
         </div>
-        <div class="alert alert-warning">
-            <strong>Pentru a adauga un anumit tip de nota pentru toti studentii acestei materii</strong> <br>
+        <div class="alert alert-success">
+            <h4 class="alert-heading"><strong>Pentru a adauga un anumit tip de nota pentru toti studentii acestei
+                    materii</strong> <br></h4>
             Completati mai jos informatiile necesare
             <br>
             <form id="add_nota">
@@ -474,29 +494,35 @@
                         <option>Seminar/laborator</option>
                     </select>
                 </div>
-                <button type="submit" class="btn btn-warning mb-2">Adaugati</button>
+                <button type="submit" class="btn btn-outline-success mb-2">Adaugati</button>
             </form>
         </div>
     </div>
 </div>
 <div class="alert alert-danger">
-    <strong>Pentru a sterge un anumit tip de nota pentru toti studentii acestei materii</strong> <br>
+    <h4 class="alert-heading"><strong>Pentru a sterge un anumit tip de nota pentru toti studentii acestei
+            materii</strong> <br></h4>
     Completati mai jos informatiile necesare
     <br>
     <form id="sterg_nota">
         <div class="form-group">
             <label for="exampleFormControlInput1">Introduceti denumirea notei dorite...</label>
-            <input type="text" class="form-control" id="denumire_nota_sterg">
+            <!-- <input type="text" class="form-control" id="denumire_nota_sterg"> -->
+            <select class="form-control" id="denumire_nota_sterg">
+
+            </select>
         </div>
         <div class="form-group">
             <label for="exampleFormControlSelect1">Selectati tipul notei...</label>
             <select class="form-control" id="tip_nota_sterg">
+                <option>Selectati tipul...</option>
                 <option>Curs</option>
                 <option>Seminar/laborator</option>
             </select>
         </div>
     </form>
-    <button class="btn btn-danger" id="sterge_nota" name="sterge_nota" onclick="sterge_nota();">Stergeti</button>
+    <button class="btn btn-outline-danger" id="sterge_nota" name="sterge_nota" onclick="sterge_nota();">Stergeti
+    </button>
 </div>
 </div>
 <!--
