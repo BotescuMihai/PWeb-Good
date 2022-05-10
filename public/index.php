@@ -484,14 +484,18 @@ $app->post('/profesor/materii/{ID_m}/note/{nota_ID}', function (Request $request
 
 
 /////////////////////// PUT
-/*
+
 $app->put('/profesor/materii/{ID_m}/note/{nota_ID}', function (Request $request, Response $response, array $args) {
     $ID_m = $args['ID_m'];
     $nota_ID = $args['nota_ID'];
+    $student = $request->getParam('student');
+    $nota = $request->getParam('nota');
+    $pondere = $request->getParam('pondere');
     $pdo = new PDO("mysql:host=localhost;dbname=proiectpw", "root", "root");
-    $stmt = $pdo->prepare("UPDATE note SET id=(:id) WHERE id=" . $nota_ID . " AND materie_id=" . $ID_m);
+    $stmt = $pdo->prepare("UPDATE note SET pondere=(:pondere), valoare=(:valoare) WHERE tip_nota=(:id) AND materie_id=(:mid) AND student.id=(SELECT student.id FROM student WHERE student.email=(:student))");
+    $stmt->execute(array(':pondere' => $pondere, ':valoare' => $nota, ':id' => $nota_ID, ':mid' => $ID_m, ':student' => $student));
 });
-*/
+
 
 ///////////////////// DELETE
 

@@ -56,20 +56,20 @@
         var selectCurs = '', selectSeminarLab = '';
         var id = 0;
 
-
-        function func(data) {
-            var send_data = data['tip_nota'];
-            var datas = data['denumire_nota'].split(' ');
-            var send_data_2 = '';
-            for (var i = 0; i < datas.length - 1; i++) {
-                send_data_2 += datas[i] + '_';
-            }
-            send_data_2 += datas[i];
-            var nota_ID = send_data + '_' + send_data_2;
-            $(document).ready(function (e) {
-                e.preventDefault();
-                $.ajax({
-                    url: "http://localhost:8888/myslimsite/public/profesor/materii/" + {{ ID_m }} +"/note/" + nota_ID,
+        /*
+                function func(data) {
+                    var send_data = data['tip_nota'];
+                    var datas = data['denumire_nota'].split(' ');
+                    var send_data_2 = '';
+                    for (var i = 0; i < datas.length - 1; i++) {
+                        send_data_2 += datas[i] + '_';
+                    }
+                    send_data_2 += datas[i];
+                    var nota_ID = send_data + '_' + send_data_2;
+                    $(document).ready(function (e) {
+                        e.preventDefault();
+                        $.ajax({
+                            url: "http://localhost:8888/myslimsite/public/profesor/materii/" + {{ ID_m }} +"/note/" + nota_ID,
                     type: "PUT",
                     data: {
                         'valoare': data['valoare'],
@@ -89,7 +89,7 @@
                 });
             });
 
-        }
+        } */
 
         function sterge_nota() {
             var denumire_nota_sterg = $('#denumire_nota_sterg').val();
@@ -104,7 +104,7 @@
             for (var i = 0; i < datas.length; i++)
                 data += datas[i] + '_';
             var findata = '';
-            for (var i = 0; i < data.length - 2; i++)
+            for (var i = 0; i < data.length - 3; i++)
                 findata += data[i];
             data = findata;
             //    data[data.length-1]='';
@@ -225,7 +225,9 @@
                 );
             });
         });
-
+        var ponderi = {};
+        ponderi['curs'] = {};
+        ponderi['seminar_laborator'] = {};
         $(document).ready(function () {
             function fetch_students() {
                 $.ajax(
@@ -235,11 +237,14 @@
                         success: function (data) {
                             console.log(data);
                             var html = '';
+                            var emails = '';
                             // alert(data);
                             for (var i = 0; i < data.length; i++) {
                                 html += "<a class='dropdown-item'  href='http://localhost:8888/myslimsite/public/teacher/courses/" + data[i]['id_m'] + "/students/" + data[i]['id'] + "/grades'>[" + data[i]['id'] + "] -- " + data[i]['username'] + "</a>";
+                                emails += "<option value='" + data[i]['username'] + "'>" + data[i]['username'] + "</option>";
                             }
                             $('#studenti_menu').html(html);
+                            $('#studenti').html(emails);
                         },
                         error: function () {
                             console.log('Error ajax!');
@@ -267,15 +272,23 @@
     </div></td>`;
                         var htmlInitiale = "<tr class='table-info'><td><strong>E-mail student (@e-uvt.ro)</strong></td><td>" + data.uname + "</td></tr>";
                         var htmlCurs = '', htmlSeminarLab = '', htmlFinal = '';
-                        var note = data.note;
+                        var note = data['note'];
+                        //  console.log('note ' + note[1]['tip_nota']);
                         $('#info_generale').html(htmlInitiale);
                         $('#materie').html(data.materie);
                         var html_curs_opt = '', html_seminar_laborator_opt = '';
                         for (var i = 0; i < note.length; i++) {
                             if (note[i]['tip_nota'] == 'curs') {
+                                ponderi['curs'][note[i]['denumire_nota']] = note[i]['pondere'];
                                 htmlCurs += '<tr><td  contenteditable="true"><strong>' + note[i]['denumire_nota'] + '</strong></td><td  contenteditable="true">' + note[i]['valoare'] + '</td><td contenteditable="true">' + note[i]['pondere'] + `%</td></tr>`;
                                 selectCurs += `<option value='` + note[i]['denumire_nota'] + `'>` + note[i]['denumire_nota'] + `</option>`;
                             } else if (note[i]['tip_nota'] == 'seminar' || note[i]['tip_nota'] == 'laborator') {
+                                // var notte = note[i];
+                                //    var notes = note[i]['denumire_nota'].split(' ');
+                                //  var nota='';
+                                //for(var i=0;i<notes.length;i++)
+                                //  nota += notes[i] + ' ';
+                                ponderi['seminar_laborator'][note[i]['denumire_nota']] = note[i]['pondere'];
                                 htmlSeminarLab += '<tr><td contenteditable="true"><strong>' + note[i]['denumire_nota'] + '</strong></td><td  contenteditable="true">' + note[i]['valoare'] + '</td><td contenteditable="true">' + note[i]['pondere'] + '%</td></tr>';
                                 selectSeminarLab += `<option value='` + note[i]['denumire_nota'] + `'>` + note[i]['denumire_nota'] + `</option>`;
                             }
@@ -308,6 +321,49 @@
             fetch_data();
             fetch_students();
         });
+
+        function PUT() {
+            var tip = $('#tip_nota_put').val();
+            if (tip == 'Curs')
+                tip = 'curs';
+            else tip = 'seminar_laborator';
+            var den = $('#denumire_nota_put').val();
+            var studenti = $('#studenti').val();
+            var dens = den.split(' ');
+            var res = tip + '_';
+            for (var i = 0; i < dens.length - 1; i++) {
+                res += dens[i] + '_';
+            }
+            res += dens[i];
+            var ress = '';
+            for (var i = 0; i < res.length - 1; i++)
+                ress += res[i];
+            res = ress;
+            var notanou = $('#noua_valoare_nota_put').val();
+            var ponderenou = $('#pondere_nota_put').val();
+            $.ajax({
+                url: "/profesor/materii/" + {{ ID_m }} +"/note/" + res,
+                type: "PUT",
+                data: {
+                    'student': studenti,
+                    'nota': notanou,
+                    'pondere': ponderenou,
+                },
+                success: function (data) {
+                    console.log("PUT " + "/profesor/materii/" + {{ ID_m }} +"/note/" + res);
+                    console.log("SUCCESS!");
+                    console.log("Data sent:" + data);
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    console.log("PUT " + "/profesor/materii/" + {{ ID_m }} +"/note/" + res);
+                    console.log("It FAILED!");
+                    console.log(jqXHR);
+                    console.log(textStatus);
+                    console.log(errorThrown);
+                }
+            });
+        }
+
         $(document).ready(function () {
             $('#tip_nota_sterg').change(function () {
                 if ($('#tip_nota_sterg').val() == 'Curs') {
@@ -320,6 +376,18 @@
                 if ($('#tip_nota_upd').val() == 'Curs') {
                     $('#denumire_nota_upd').html(selectCurs);
                 } else $('#denumire_nota_upd').html(selectSeminarLab);
+            });
+        });
+        $(document).ready(function () {
+            $('#tip_nota_put').change(function () {
+                if ($('#tip_nota_put').val() == 'Curs') {
+                    $('#denumire_nota_put').html(selectCurs);
+                } else $('#denumire_nota_put').html(selectSeminarLab);
+            });
+            $('#denumire_nota_put').change(function () {
+                if ($('#tip_nota_put').val() == 'Curs')
+                    $('#pondere_nota_put').html(ponderi['curs'][$('#denumire_nota_put').val()]);
+                else $('#pondere_nota_put').html(ponderi['seminar_laborator'][$('#denumire_nota_put').val()]);
             });
         });
     </script>
@@ -624,38 +692,45 @@
 </div>
 
 <div class="alert alert-warning">
-    <h4 class="alert-heading"><strong>Pentru a actualiza un anumit tip de nota pentru toti studentii acestei
-            materii</strong> <br></h4>
+    <h4 class="alert-heading"><strong>Pentru a actualiza un anumit tip de nota pentru un anume student inscris la
+            aceasta
+            materie</strong> <br></h4>
     Completati mai jos informatiile necesare
     <br>
-    <form id="upd_nota_all">
+    <form id="upd_nota_all" method="POST">
+        <div class="form-group">
+            <label for="exampleFormControlInput2">Selectati studentul dorit...</label>
+            <select id="studenti" name="studenti">
+
+            </select>
+        </div>
         <div class="form-group">
             <label for="exampleFormControlInput1">Introduceti denumirea notei dorite...</label>
             <!-- <input type="text" class="form-control" id="denumire_nota_sterg"> -->
-            <select class="form-control" id="denumire_nota_upd">
+            <select class="form-control" id="denumire_nota_put">
 
             </select>
         </div>
         <div class="form-group">
             <label for="exampleFormControlSelect1">Selectati tipul notei...</label>
-            <select class="form-control" id="tip_nota_upd">
+            <select class="form-control" id="tip_nota_put">
                 <option>Selectati tipul...</option>
                 <option>Curs</option>
                 <option>Seminar/laborator</option>
             </select>
         </div>
         <div class="form-group">
-            <label for="exampleFormControlInput1">Introduceti noua denumire...</label>
-            <input type="text" class="form-control" id="noua_denumire_nota_upd">
+            <label for="exampleFormControlInput1">Introduceti noua valoare a notei...</label>
+            <input type="text" class="form-control" id="noua_valoare_nota_put">
         </div>
         <div class="form-group">
             <label>Introduceti ponderea notei... </label>
-            <input type="number" value="50" min="1" max="100" step="1" id="pondere_nota_upd"/>
+            <input type="number" value="50" min="1" max="100" step="1" id="pondere_nota_put"/>
         </div>
-
-        <button type="submit" class="btn btn-outline-success" id="sterge_nota" name="sterge_nota">Actualizati
-        </button>
+        <input type="hidden" name="_METHOD" value="PUT">
     </form>
+    <button class="btn btn-outline-warning" id="upd_nota" name="upd_nota" onclick="PUT()">Actualizati
+    </button>
 </div>
 </div>
 

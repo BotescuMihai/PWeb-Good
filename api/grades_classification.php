@@ -6,7 +6,7 @@ function getfields($grade)
     $name = '';
     $i = 0;
     foreach ($fields as $field) {
-        if ($i > 0) {
+        if ($i > 0 && $field != 'seminar' && $field != 'laborator') {
             $name .= $field . ' ';
         }
         $i++;
