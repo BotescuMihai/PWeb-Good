@@ -17,13 +17,21 @@
     <script>
         $("#form").submit(function (e) {
             var form = $(this);
+            /*    $.ajaxSetup({
+                    headers: { 'email': $('#email').val() }
+                }); */
+            $.ajaxSetup({
+                beforeSend: function (xhr) {
+                    xhr.setRequestHeader('email', 'some value');
+                }
+            });
+            $.ajax({url: "http://localhost:8888/public/"});
+
             $.ajax({
                 type: "POST",
                 url: "http://localhost:8888/public/",
-                headers: {
-                    'email': $('#email').value(),
-                },
                 data: form.serialize(), // serializes the form's elements.
+                headers: {'email': 'some mail'},
                 success: function (data) {
                     console.log(data);
                 },

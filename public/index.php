@@ -8,6 +8,13 @@ use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\Factory\AppFactory;
 
+header('Access-Control-Allow-Origin: *');
+header("Access-Control-Allow-Methods: POST, GET");
+header('Custom-Header: Test');
+header('Access-Control-Expose-Headers: Custom-Header');
+header('Content-type:text/plain');
+
+
 require __DIR__ . '/../vendor/autoload.php';
 
 //$email = '';
@@ -23,6 +30,13 @@ $twig = new \Twig\Environment($loader, [
 
 
 /////
+///
+function getEmail()
+{
+    $myfile = fopen("email.txt", "r") or die("Unable to open file!");
+    return fread($myfile, filesize("email.txt"));
+}
+
 $container = $app->getContainer();
 
 $container['view'] = function ($container) {
@@ -49,12 +63,12 @@ $container['view'] = function ($container) {
 $app->get('/profesor/materii', function (Request $request, Response $response) {
     $DB = new db();
 
-    if (!isset($_SESSION['email'])) {
+    if (getEmail() == '' || !profesor(getEmail())) {
         $arr = array('error' => 'You must be logged in !');
         echo json_encode($arr);
         die();
     }
-    $query = "SELECT materie.id, denumire FROM materie INNER JOIN profesor WHERE materie.profesor_id=profesor.id AND profesor.username='" . $_SESSION['email'] . "'";
+    $query = "SELECT materie.id, denumire FROM materie INNER JOIN profesor WHERE materie.profesor_id=profesor.id AND profesor.username='" . getEmail() . "'";
     $stmt = $DB->execute_SELECT($query);
     $materii = array();
     if (count($stmt) == 0) {
@@ -63,7 +77,7 @@ $app->get('/profesor/materii', function (Request $request, Response $response) {
         die();
     } else {
         foreach ($stmt as $row) {
-            $materii[] = array('id' => $row['id'], 'denumire' => $row['denumire'], 'email' => $_SESSION['email']);
+            $materii[] = array('id' => $row['id'], 'denumire' => $row['denumire'], 'email' => getEmail());
         }
         echo json_encode($materii);
     }
@@ -77,28 +91,26 @@ $app->get('/teacher/subjects', function (Request $request, Response $response) {
 $app->get('/student/materii', function (Request $request, Response $response) {
     $DB = new db();
     $payload = array();
-    if (!isset($_SESSION['email'])) {
-        $arr = array('error' => 'You must be logged in !');
-        echo json_encode($arr);
-    } else {
-        $query = "SELECT materie.id, denumire from materie
+    $query = "SELECT materie.id, denumire from materie
 INNER JOIN student ON materie.id = student.materie_ID
-WHERE student.username ='" . $_SESSION['email'] . "'";
-        $stmt = $DB->execute_SELECT($query);
+WHERE student.username ='" . getEmail() . "'";
+    $stmt = $DB->execute_SELECT($query);
         $materii = array();
-        if (count($stmt) == 0) {
-            $arr = array('Error' => 'No Records found!', 'email' => $_SESSION['email']);
-            $payload = $arr;
-//        echo $payload;
-        } else {
-            foreach ($stmt as $row) {
-                $materii[] = array('id' => $row['id'], 'denumire' => $row['denumire'], 'email' => $_SESSION['email']);
-            }
-            $payload = $materii;
-            //   echo $payload;
+    if (count($stmt) == 0) {
+        $arr = array('Error' => 'No Records found!', 'email' => $request->getHeader('email'));
+        $payload = $arr;
+    } else {
+        foreach ($stmt as $row) {
+            $materii[] = array('id' => $row['id'], 'denumire' => $row['denumire'], 'email' => $request->getHeader('email'));
         }
-        echo json_encode($payload);
+        $payload = $materii;
+        //   echo $payload;
     }
+    //  $payload[] = array('header'=>$request->getHeaders());
+    // echo json_encode($payload);
+    // $payload[] = array('email'=>);
+    return $response->withJson($payload, 200)->withHeader('Content-Type', 'application/json')->withAddedHeader('email', $response->getHeader('email'));
+
 });
 
 $app->get('/student/courses', function (Request $request, Response $response) {
@@ -106,12 +118,9 @@ $app->get('/student/courses', function (Request $request, Response $response) {
 });
 
 $app->get('/student/materii/{ID_m}/note', function (Request $req, Response $resp, $args) {
-    $_SESSION['ID_m'] = $args['ID_m'];
     $DB = new db();
-    if (!isset($_SESSION['ID_m'])) {
-        return json_encode(array('Error' => 'Not found'));
-    }
-    if (!isset($_SESSION['email'])) {
+
+    if (getEmail() == '') {
         return json_encode(array('Error' => 'You must be logged in!'));
     }
     $query = "SELECT * FROM note
@@ -119,7 +128,7 @@ INNER JOIN student
 ON note.student_id = student.id
 INNER JOIN materie
 ON materie.id = note.materie_id
-WHERE student.username = '" . $_SESSION['email'] . "' AND materie.id = " . $_SESSION['ID_m'];
+WHERE student.username = '" . getEmail() . "' AND materie.id = " . $args['ID_m'];
     $stmt = $DB->execute_SELECT($query);
     $note = array();
     $profesor = '';
@@ -137,7 +146,7 @@ WHERE student.username = '" . $_SESSION['email'] . "' AND materie.id = " . $_SES
                 'denumire' => $row['denumire'],
                 'pondere' => $row['pondere']);
         }
-        $query = "SELECT student.username AS un, profesor.username AS unp, tip_nota, pondere, valoare, materie.denumire, profesor.username FROM note INNER JOIN materie ON materie.id = note.materie_id INNER JOIN profesor on materie.profesor_id = profesor.id INNER JOIN student ON student.id = note.student_id WHERE student.username='" . $_SESSION['email'] . "' AND note.materie_id =" . $_SESSION['ID_m'] . " AND note.tip_nota LIKE 'final_%'";
+        $query = "SELECT student.username AS un, profesor.username AS unp, tip_nota, pondere, valoare, materie.denumire, profesor.username FROM note INNER JOIN materie ON materie.id = note.materie_id INNER JOIN profesor on materie.profesor_id = profesor.id INNER JOIN student ON student.id = note.student_id WHERE student.username='" . getEmail() . "' AND note.materie_id =" . $args['ID_m'] . " AND note.tip_nota LIKE 'final_%'";
         $stmt = $DB->execute_SELECT($query);
         $prof = '';
         if (count($stmt) > 0) {
@@ -149,8 +158,8 @@ WHERE student.username = '" . $_SESSION['email'] . "' AND materie.id = " . $_SES
                 }
                 $profesor = $row['unp'];
             }
-            $arr = array('profesor' => $profesor, 'ponderi' => $ponderi, 'note' => $note, 'id_materie' => $note[0]['idm'], 'uname' => $_SESSION['email'], 'nota_curs' => getNotaFinalaCurs($note), 'nota_seminar_laborator' => getNotaFinalaSeminarLab($note)); //'formula_curs' => getPonderiCurs($note), 'formula_seminar_laborator' => getPonderiSeminar_Laborator($note));
-        } else         $arr = array('profesor' => $profesor, 'note' => $note, 'id_materie' => $note[0]['idm'], 'uname' => $_SESSION['email'], 'nota_curs' => getNotaFinalaCurs($note), 'nota_seminar_laborator' => getNotaFinalaSeminarLab($note)); //'formula_curs' => getPonderiCurs($note), 'formula_seminar_laborator' => getPonderiSeminar_Laborator($note));
+            $arr = array('profesor' => $profesor, 'ponderi' => $ponderi, 'note' => $note, 'id_materie' => $note[0]['idm'], 'uname' => getEmail(), 'nota_curs' => getNotaFinalaCurs($note), 'nota_seminar_laborator' => getNotaFinalaSeminarLab($note)); //'formula_curs' => getPonderiCurs($note), 'formula_seminar_laborator' => getPonderiSeminar_Laborator($note));
+        } else         $arr = array('profesor' => $profesor, 'note' => $note, 'id_materie' => $note[0]['idm'], 'uname' => getEmail(), 'nota_curs' => getNotaFinalaCurs($note), 'nota_seminar_laborator' => getNotaFinalaSeminarLab($note)); //'formula_curs' => getPonderiCurs($note), 'formula_seminar_laborator' => getPonderiSeminar_Laborator($note));
         echo json_encode($arr);
     }
     //  include '../api/situatie_student.php';
@@ -177,11 +186,10 @@ $app->get('/profesor/materii/{ID}/note', function (Request $request, Response $r
 
 }); */
 $app->get('/teacher/subjects/{ID_m}', function (Request $request, Response $response, $args) {
-    if (!isset($_SESSION['email'])) { // daca nu is autentificat
+    if (getEmail() == '') { // daca nu is autentificat
         $newresponse = $response->withStatus(404);
         throw new PDOException('Not logged in');
     }
-    $_SESSION['profesor_ID_m'] = $args['ID_m'];
     return $this->view->render($response, 'course_info.twig', ['profesor_ID_m' => $args['ID_m']]);
 });
 
@@ -203,15 +211,13 @@ $app->get('/profesor/materii/{ID_m}', function (Request $request, Response $resp
 
 
 $app->get('/teacher/courses/{ID_m}/students', function ($request, $response, $args) {
-    $_SESSION['profesor_ID_m'] = $args['ID_m'];
     return $this->view->render($response, 'student_grades.twig', ['ID_m' => $args['ID_m']]);
 });
 
 $app->get('/profesor/materii/{ID_m}/studenti', function ($request, $response, $args) {
-    $_SESSION['profesor_ID_m'] = $args['ID_m'];
     $DB = new db();
 
-    $query = "SELECT DISTINCT student.id, materie.id AS idm, student.username FROM student INNER JOIN note on note.student_id = student.id INNER JOIN materie on note.materie_id = materie.id WHERE materie.id=" . $_SESSION['profesor_ID_m'];
+    $query = "SELECT DISTINCT student.id, student.username, student.materie_ID AS idm FROM student WHERE materie_ID=" . $args['ID_m'];
 //unset($_SESSION['profesor_ID_m']);
     $stmt = $DB->execute_SELECT($query);
     $note = array();
@@ -327,11 +333,12 @@ $app->get('/', function ($request, $response) {
 
 $app->post('/', function (Request $request, Response $response, array $args) {
     $router = $this->router;
-    $_SESSION['email'] = $_POST['email'];
-    //$_SESSION['email'] = $_POST['email'];
-    if (profesor($_POST['email'])) {
-        return $response->withRedirect($router->pathFor('profesor-login'))->withAddedHeader('email', $_POST['email']);
-    } else         return $response->withRedirect($router->pathFor('student-login'))->withAddedHeader('email', $_POST['email']);
+    $file = fopen("email.txt", "w");
+    fwrite($file, $request->getParam('email'));
+    fclose($file);
+    if (profesor($request->getParam('email'))) {
+        return $response->withRedirect($router->pathFor('profesor-login'));
+    } else         return $response->withRedirect($router->pathFor('student-login'));
 
 });
 
@@ -346,22 +353,16 @@ $app->get('/teacher', function (Request $request, Response $response, array $arg
 /////////////////
 ///
 $app->get('/teacher/subjects/{ID_m}/students/{student_ID}/attendance/{tip}', function (Request $request, Response $response, $args) {
-    if (!isset($_SESSION['email'])) { // daca nu is autentificat
+    if (getEmail() == '') { // daca nu is autentificat
         $newresponse = $response->withStatus(404);
         throw new PDOException('Not logged in');
     }
-    $_SESSION['profesor_ID_m'] = $args['ID_m'];
-    $_SESSION['profesor_student_ID'] = $args['student_ID'];
-    $_SESSION['profesor_tip_prezenta'] = $args['tip'];
     return $this->view->render($response, 'prezente_student.twig', ['ID_m' => $args['ID_m'], 'student_ID' => $args['student_ID'], 'tip' => $args['tip']]);
 });
 
 $app->get('/profesor/materii/{ID_m}/studenti/{student_ID}/prezente/{tip}', function (Request $request, Response $response, $args) {
     $DB = new db();
-    $_SESSION['profesor_ID_m'] = $args['ID_m'];
-    $_SESSION['profesor_student_ID'] = $args['student_ID'];
-    $_SESSION['profesor_tip_prezenta'] = $args['tip'];
-    if (!isset($_SESSION['profesor_ID_m']) || !isset($_SESSION['profesor_student_ID']) || !isset($_SESSION['profesor_tip_prezenta'])) {
+    if (!isset($args['ID_m']) || !isset($args['student_ID']) || !isset($args['tip'])) {
         echo '<h1>Error!</h1><h3>Not found</h3>';
         die();
     }
@@ -369,7 +370,7 @@ $app->get('/profesor/materii/{ID_m}/studenti/{student_ID}/prezente/{tip}', funct
 FROM prezenta
 INNER JOIN student ON prezenta.student_id = student.id
 INNER JOIN materie ON prezenta.materie_id = materie.id
-WHERE prezenta.materie_id = " . $_SESSION['profesor_ID_m'] . " AND student.id = " . $_SESSION['profesor_student_ID'] . " AND prezenta.tip_prezenta='" . $_SESSION['profesor_tip_prezenta'] . "'";
+WHERE prezenta.materie_id = " . $args['ID_m'] . " AND student.id = " . $args['student_ID'] . " AND prezenta.tip_prezenta='" . $args['tip'] . "'";
     $stmt = $DB->execute_SELECT($query);
     $note = array();
     if (count($stmt) == 0) {
@@ -386,7 +387,7 @@ WHERE prezenta.materie_id = " . $_SESSION['profesor_ID_m'] . " AND student.id = 
 //////////////////
 
 $app->get('/student/courses/{ID_m}/attendance', function (Request $request, Response $response, $args) {
-    if (!isset($_SESSION['email'])) { // daca nu is autentificat
+    if (getEmail() == '') { // daca nu is autentificat
         $newresponse = $response->withStatus(404);
         throw new PDOException('Not logged in');
     }
@@ -399,7 +400,7 @@ $app->get('/student/materii/{ID_m}/prezente', function (Request $request, Respon
 FROM prezenta
 INNER JOIN student ON prezenta.student_id = student.id
 INNER JOIN materie ON prezenta.materie_id = materie.id
-WHERE prezenta.materie_id = " . $args['ID_m'] . " AND student.username='" . $_SESSION['email'] . "'";
+WHERE prezenta.materie_id = " . $args['ID_m'] . " AND student.username='" . getEmail() . "'";
     $stmt = $DB->execute_SELECT($query);
     $note = array();
     if (count($stmt) == 0) {
@@ -419,8 +420,8 @@ WHERE prezenta.materie_id = " . $args['ID_m'] . " AND student.username='" . $_SE
 
 $app->post('/profesor/materii/{ID_m}/studenti/note', function (Request $request, Response $response, array $args) {
     $ID_m = $args['ID_m'];
-    $nota = $_REQUEST['nota'];
-    $pondere = $_REQUEST['pondere'];
+    $nota = $request->getParam('nota');
+    $pondere = $request->getParam('pondere');
     $db = new db();
     $stmt = $db->execute_SELECT("SELECT student.username, student.id
     FROM student
@@ -459,8 +460,8 @@ $app->post('/profesor/materii/{ID_m}/studenti/note', function (Request $request,
 $app->post('/profesor/materii/{ID_m}/note/{nota_ID}', function (Request $request, Response $response, array $args) {
     $idm = $args['ID_m'];
     $nota_id = $args['nota_ID'];
-    $new_nota = $_REQUEST['nota_nou'];
-    $pondere = $_REQUEST['pondere'];
+    $new_nota = $request->getParam('nota_nou');
+    $pondere = $request->getParam('pondere');
     $db = new db();
     $stmt = $db->execute_SELECT("SELECT student.username, student.id
     FROM student
