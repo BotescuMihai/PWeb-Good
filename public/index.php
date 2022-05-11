@@ -9,7 +9,7 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\Factory\AppFactory;
 
 header('Access-Control-Allow-Origin: *');
-header("Access-Control-Allow-Methods: POST, GET");
+header("Access-Control-Allow-Methods: POST, GET, DELETE, PUT");
 header('Custom-Header: Test');
 header('Access-Control-Expose-Headers: Custom-Header');
 header('Content-type:text/plain');
@@ -65,7 +65,8 @@ $app->get('/profesor/materii', function (Request $request, Response $response) {
 
     if (getEmail() == '' || !profesor(getEmail())) {
         $arr = array('error' => 'You must be logged in !');
-        echo json_encode($arr);
+        return $response->withJson($arr, 400);
+        //  echo json_encode($arr);
         die();
     }
     $query = "SELECT materie.id, denumire FROM materie INNER JOIN profesor WHERE materie.profesor_id=profesor.id AND profesor.username='" . getEmail() . "'";
@@ -73,13 +74,14 @@ $app->get('/profesor/materii', function (Request $request, Response $response) {
     $materii = array();
     if (count($stmt) == 0) {
         $arr = array('Error' => 'No Records found!');
-        echo json_encode($arr);
+        return $response->withJson($arr, 404);
         die();
     } else {
         foreach ($stmt as $row) {
             $materii[] = array('id' => $row['id'], 'denumire' => $row['denumire'], 'email' => getEmail());
         }
-        echo json_encode($materii);
+        //    echo json_encode($materii);
+        return $response->withJson($materii, 200);
     }
 });
 
@@ -91,14 +93,18 @@ $app->get('/teacher/subjects', function (Request $request, Response $response) {
 $app->get('/student/materii', function (Request $request, Response $response) {
     $DB = new db();
     $payload = array();
+    if (student(getEmail()) == false) {
+        return $response->withJson(array('Error' => 'You must be logged in!'), 400);
+    }
     $query = "SELECT materie.id, denumire from materie
 INNER JOIN student ON materie.id = student.materie_ID
 WHERE student.username ='" . getEmail() . "'";
     $stmt = $DB->execute_SELECT($query);
-        $materii = array();
+    $materii = array();
     if (count($stmt) == 0) {
         $arr = array('Error' => 'No Records found!', 'email' => $request->getHeader('email'));
-        $payload = $arr;
+        return $response->withJson($arr, 404);
+        // $payload = $arr;
     } else {
         foreach ($stmt as $row) {
             $materii[] = array('id' => $row['id'], 'denumire' => $row['denumire'], 'email' => $request->getHeader('email'));
@@ -120,8 +126,8 @@ $app->get('/student/courses', function (Request $request, Response $response) {
 $app->get('/student/materii/{ID_m}/note', function (Request $req, Response $resp, $args) {
     $DB = new db();
 
-    if (getEmail() == '') {
-        return json_encode(array('Error' => 'You must be logged in!'));
+    if (student(getEmail()) == false) {
+        return $resp->withJson(array('Error' => 'You must be logged in!'), 400);
     }
     $query = "SELECT * FROM note
 INNER JOIN student
@@ -134,8 +140,8 @@ WHERE student.username = '" . getEmail() . "' AND materie.id = " . $args['ID_m']
     $profesor = '';
     if (count($stmt) == 0) {
         $arr = array('Error' => 'No Records found!');
-        echo json_encode($arr);
-        //  response(NULL, NULL, 200,"No Record Found");
+        return $resp->withJson($arr, 404);
+
     } else {
         foreach ($stmt as $row) {
             $info_nota = getfields($row['tip_nota']);
@@ -160,7 +166,7 @@ WHERE student.username = '" . getEmail() . "' AND materie.id = " . $args['ID_m']
             }
             $arr = array('profesor' => $profesor, 'ponderi' => $ponderi, 'note' => $note, 'id_materie' => $note[0]['idm'], 'uname' => getEmail(), 'nota_curs' => getNotaFinalaCurs($note), 'nota_seminar_laborator' => getNotaFinalaSeminarLab($note)); //'formula_curs' => getPonderiCurs($note), 'formula_seminar_laborator' => getPonderiSeminar_Laborator($note));
         } else         $arr = array('profesor' => $profesor, 'note' => $note, 'id_materie' => $note[0]['idm'], 'uname' => getEmail(), 'nota_curs' => getNotaFinalaCurs($note), 'nota_seminar_laborator' => getNotaFinalaSeminarLab($note)); //'formula_curs' => getPonderiCurs($note), 'formula_seminar_laborator' => getPonderiSeminar_Laborator($note));
-        echo json_encode($arr);
+        return $resp->withJson(json_encode($arr), 200);
     }
     //  include '../api/situatie_student.php';
 //    $arr = note_student();
@@ -186,9 +192,8 @@ $app->get('/profesor/materii/{ID}/note', function (Request $request, Response $r
 
 }); */
 $app->get('/teacher/subjects/{ID_m}', function (Request $request, Response $response, $args) {
-    if (getEmail() == '') { // daca nu is autentificat
-        $newresponse = $response->withStatus(404);
-        throw new PDOException('Not logged in');
+    if (profesor(getEmail()) == false) { // daca nu is autentificat
+        return $response->withStatus(400, 'Eroare! Trebuie sa fiti autentificat!')->withHeader('Eroare', '400');
     }
     return $this->view->render($response, 'course_info.twig', ['profesor_ID_m' => $args['ID_m']]);
 });
@@ -196,14 +201,17 @@ $app->get('/teacher/subjects/{ID_m}', function (Request $request, Response $resp
 $app->get('/profesor/materii/{ID_m}', function (Request $request, Response $response, $args) {
     $DB = new db();
     $ID_m = $args['ID_m'];
+    if (profesor(getEmail()) == false) {
+        return $response->withJson(array('Error' => 'You must be logged in!'), 400);
+    }
     $arr = array('inscrisi' => getStudentiInscrisi($DB, $ID_m)['nr_inscrisi'], 'titular' => getTitularCurs($DB, $ID_m)['prof_titular'], 'materie' => getMaterie($DB, $ID_m)['materie']);
     if ($arr['inscrisi'] == null && $arr['titular'] == null && $arr['materie'] == null) {
-        echo json_encode(array('Error' => 'No records found!'));
+        return $response->withJson(array('Error' => 'No records found!'), 404);
     } else if ($arr['inscrisi'] == null) {
         $arr['inscrisi'] = 0;
-        echo json_encode($arr);
+        return $response->withJson($arr, 200);
     } else
-        echo json_encode($arr);
+        return $response->withJson($arr, 200);
 });
 
 //////
@@ -216,14 +224,16 @@ $app->get('/teacher/courses/{ID_m}/students', function ($request, $response, $ar
 
 $app->get('/profesor/materii/{ID_m}/studenti', function ($request, $response, $args) {
     $DB = new db();
-
+    if (profesor(getEmail()) == false) {
+        return $response->withJson(array('Error' => 'You must be logged in!'), 400);
+    }
     $query = "SELECT DISTINCT student.id, student.username, student.materie_ID AS idm FROM student WHERE materie_ID=" . $args['ID_m'];
 //unset($_SESSION['profesor_ID_m']);
     $stmt = $DB->execute_SELECT($query);
     $note = array();
     if (count($stmt) == 0) {
         $arr = array('Error' => 'No Records found!');
-        echo json_encode($arr);
+        return $response->withJson($arr, 404);
     } else {
         $materie = '';
         $uname = '';
@@ -241,7 +251,7 @@ $app->get('/profesor/materii/{ID_m}/studenti', function ($request, $response, $a
             $studenti[] = array('id' => $row['id'], 'username' => $row['username'], 'id_m' => $row['idm']);
             $unames[] = $row['username'];
         }
-        echo json_encode($studenti);
+        return $response->withJson($studenti, 200);
     }
 });
 /*
@@ -287,13 +297,16 @@ $app->get('/profesor/materii/{ID_m}/studenti/{ID}/note', function ($request, $re
     //////////////////////////////////////////////
     ///
     ///
+    if (profesor(getEmail()) == false) {
+        return $response->withJson(array('Error' => 'You must be logged in!'), 400);
+    }
     $DB = new db();
     $query = "SELECT student.username AS un, tip_nota, pondere, valoare, materie.denumire, profesor.username FROM note INNER JOIN materie ON materie.id = note.materie_id INNER JOIN profesor on materie.profesor_id = profesor.id INNER JOIN student ON student.id = note.student_id WHERE note.student_id=" . $args['ID'] . " AND note.materie_id =" . $args['ID_m'] . " AND note.tip_nota NOT LIKE 'final_%'";
     $stmt = $DB->execute_SELECT($query);
     $note = array();
     if (count($stmt) == 0) {
         $arr = array('Error' => 'No Records found!');
-        echo json_encode($arr);
+        return $response->withJson($arr, 404);
     } else {
         $materie = '';
         $uname = '';
@@ -322,7 +335,7 @@ $app->get('/profesor/materii/{ID_m}/studenti/{ID}/note', function ($request, $re
     if (isset($ponderi))
         $arr = array('note' => $note, 'uname' => $uname, 'materie' => $materie, 'final_curs' => getNotaFinalaCurs($note), 'final_seminar_lab' => getNotaFinalaSeminarLab($note), 'ponderi' => $ponderi);
     else $arr = array('note' => $note, 'uname' => $uname, 'materie' => $materie, 'final_curs' => getNotaFinalaCurs($note), 'final_seminar_lab' => getNotaFinalaSeminarLab($note), 'ponderi' => 'Nu au fost setate inca!');
-    echo json_encode($arr);
+    return $response->withJson($arr, 200);
 });
 
 ///////////////
@@ -353,9 +366,8 @@ $app->get('/teacher', function (Request $request, Response $response, array $arg
 /////////////////
 ///
 $app->get('/teacher/subjects/{ID_m}/students/{student_ID}/attendance/{tip}', function (Request $request, Response $response, $args) {
-    if (getEmail() == '') { // daca nu is autentificat
-        $newresponse = $response->withStatus(404);
-        throw new PDOException('Not logged in');
+    if (profesor(getEmail()) == false) {
+        return $response->withJson(array('Error' => 'You must be logged in!'), 400);
     }
     return $this->view->render($response, 'prezente_student.twig', ['ID_m' => $args['ID_m'], 'student_ID' => $args['student_ID'], 'tip' => $args['tip']]);
 });
@@ -366,6 +378,9 @@ $app->get('/profesor/materii/{ID_m}/studenti/{student_ID}/prezente/{tip}', funct
         echo '<h1>Error!</h1><h3>Not found</h3>';
         die();
     }
+    if (profesor(getEmail()) == false) {
+        return $response->withJson(array('Error' => 'You must be logged in!'), 400);
+    }
     $query = "SELECT materie.denumire, student.id AS sid, materie.id AS mid, student.username, prezenta.tip_prezenta, prezenta.numar_prezente
 FROM prezenta
 INNER JOIN student ON prezenta.student_id = student.id
@@ -375,27 +390,29 @@ WHERE prezenta.materie_id = " . $args['ID_m'] . " AND student.id = " . $args['st
     $note = array();
     if (count($stmt) == 0) {
         $arr = array('Error' => 'No Records found!');
-        echo json_encode($arr);
+        return $response->withJson($arr, 404);
     } else {
         foreach ($stmt as $row) {
             $prezente = array('username' => $row['username'], 'materie' => $row['denumire'], 'student_id' => $row['sid'], 'materie_id' => $row['mid'], 'tip' => $row['tip_prezenta'], 'numar' => $row['numar_prezente']);
         }
-        echo json_encode($prezente);
+        return $response->withJson($prezente, 200);
     }
 });
 
 //////////////////
 
 $app->get('/student/courses/{ID_m}/attendance', function (Request $request, Response $response, $args) {
-    if (getEmail() == '') { // daca nu is autentificat
-        $newresponse = $response->withStatus(404);
-        throw new PDOException('Not logged in');
+    if (student(getEmail()) == false) { // daca nu is autentificat
+        return $response->withJson(array('Error' => 'You must be logged in...'), 404);
     }
     return $this->view->render($response, 'prezente_student_all.twig', ['ID_m' => $args['ID_m']]);
 });
 
 $app->get('/student/materii/{ID_m}/prezente', function (Request $request, Response $response, $args) {
     $DB = new db();
+    if (student(getEmail()) == false) {
+        return $response->withJson(array('Error' => 'You must be logged in!'), 400);
+    }
     $query = "SELECT materie.denumire, student.id AS sid, materie.id AS mid, student.username, prezenta.tip_prezenta, prezenta.numar_prezente
 FROM prezenta
 INNER JOIN student ON prezenta.student_id = student.id
@@ -405,12 +422,12 @@ WHERE prezenta.materie_id = " . $args['ID_m'] . " AND student.username='" . getE
     $note = array();
     if (count($stmt) == 0) {
         $arr = array('Error' => 'No Records found!');
-        echo json_encode($arr);
+        return $response->withJson($arr, 404);
     } else {
         foreach ($stmt as $row) {
             $prezente[] = array('username' => $row['username'], 'materie' => $row['denumire'], 'student_id' => $row['sid'], 'materie_id' => $row['mid'], 'tip' => $row['tip_prezenta'], 'numar' => $row['numar_prezente']);
         }
-        echo json_encode($prezente);
+        return $response->withJson($prezente, 200);
     }
 });
 
@@ -423,6 +440,9 @@ $app->post('/profesor/materii/{ID_m}/studenti/note', function (Request $request,
     $nota = $request->getParam('nota');
     $pondere = $request->getParam('pondere');
     $db = new db();
+    if (profesor(getEmail()) == false) {
+        return $response->withJson(array('Error' => 'You must be logged in!'), 400);
+    }
     $stmt = $db->execute_SELECT("SELECT student.username, student.id
     FROM student
     INNER JOIN materie ON materie.id = student.materie_ID
@@ -433,14 +453,13 @@ $app->post('/profesor/materii/{ID_m}/studenti/note', function (Request $request,
     } else {
         $new_stmt = $db->execute_SELECT("SELECT note.tip_nota FROM note WHERE note.materie_id=" . $ID_m . " AND note.tip_nota='" . $nota . "'");
         if (count($new_stmt) > 0) { // daca o nota exista deja, n-o mai adaug.
-            echo json_encode(array('Error' => 'Record already exists! It will not be added...'));
+            return $response->withJson(array('Error' => 'Record already exists! It will not be added...'), 400);
             die();//
         }
         $studenti = array();
         foreach ($stmt as $row) {
             $studenti[] = $row['id'];
         }
-        echo json_encode($studenti);
         $db = new db();
         $stmt = $db->execute_SELECT("SELECT id FROM note ORDER BY id DESC");
         $id = 0;
@@ -454,6 +473,7 @@ $app->post('/profesor/materii/{ID_m}/studenti/note', function (Request $request,
             $stmt->execute(array(':id' => $id, ':materie_id' => $ID_m, ':student_id' => $student, ':tip_nota' => $nota, ':valoare' => 0, ':pondere' => $pondere));
             $id++;
         }
+        return $response->withJson(array('OK' => 'Intrare adaugata pt toti studentii'), 200);
     }
 });
 
@@ -462,18 +482,21 @@ $app->post('/profesor/materii/{ID_m}/note/{nota_ID}', function (Request $request
     $nota_id = $args['nota_ID'];
     $new_nota = $request->getParam('nota_nou');
     $pondere = $request->getParam('pondere');
+    if (profesor(getEmail()) == false) {
+        return $response->withJson(array('Error' => 'You must be logged in!'), 400);
+    }
     $db = new db();
     $stmt = $db->execute_SELECT("SELECT student.username, student.id
     FROM student
     INNER JOIN materie ON materie.id = student.materie_ID
     WHERE student.materie_ID=" . $idm);
     if (count($stmt) == 0) {
-        echo json_encode(array('Eroare' => 'Nu aveti studenti inscrisi la materia Dvs.!'));
+        return $response->withJson(array('Eroare' => 'Nu aveti studenti inscrisi la materia Dvs.!'), 404);
         die();
     } else {
         $new_stmt = $db->execute_SELECT("SELECT note.tip_nota FROM note WHERE note.materie_id=" . $idm . " AND note.tip_nota='" . $new_nota . "'");
         if (count($new_stmt) > 0) { // daca o nota exista deja, n-o mai adaug.
-            echo json_encode(array('Error' => 'Record already exists! It will not be added...'));
+            return $response->withJson(array('Error' => 'Record already exists! It will not be added...'), 400);
             die();//
         }
         $pdo = new PDO("mysql:host=localhost;dbname=proiectpw", "root", "root");
@@ -488,12 +511,15 @@ $app->post('/profesor/materii/{ID_m}/note/{nota_ID}', function (Request $request
 $app->put('/profesor/materii/{ID_m}/note/{nota_ID}', function (Request $request, Response $response, array $args) {
     $ID_m = $args['ID_m'];
     $nota_ID = $args['nota_ID'];
+    if (profesor(getEmail()) == false) {
+        return $response->withJson(array('Error' => 'You must be logged in!'), 400);
+    }
     $student = $request->getParam('student');
     $nota = $request->getParam('nota');
     $pondere = $request->getParam('pondere');
     $pdo = new PDO("mysql:host=localhost;dbname=proiectpw", "root", "root");
-    $stmt = $pdo->prepare("UPDATE note SET pondere=(:pondere), valoare=(:valoare) WHERE tip_nota=(:id) AND materie_id=(:mid) AND student.id=(SELECT student.id FROM student WHERE student.email=(:student))");
-    $stmt->execute(array(':pondere' => $pondere, ':valoare' => $nota, ':id' => $nota_ID, ':mid' => $ID_m, ':student' => $student));
+    $stmt = $pdo->prepare("UPDATE note SET pondere=(:pondere), valoare=(:valoare) WHERE tip_nota=(:id) AND materie_id=(:mid) AND note.student_id=(SELECT student.id FROM student WHERE student.username=(:student) AND student.materie_ID=(:midd))");
+    $stmt->execute(array(':pondere' => $pondere, ':valoare' => $nota, ':id' => $nota_ID, ':mid' => $ID_m, ':student' => $student, ':midd' => $ID_m));
 });
 
 
@@ -502,6 +528,9 @@ $app->put('/profesor/materii/{ID_m}/note/{nota_ID}', function (Request $request,
 $app->delete('/profesor/materii/{ID_m}/note/{nota_ID}', function (Request $request, Response $response, array $args) {
     $ID_m = $args['ID_m'];
     $nota_ID = $args['nota_ID'];
+    if (profesor(getEmail()) == false) {
+        return $response->withJson(array('Error' => 'You must be logged in!'), 400);
+    }
     $pdo = new PDO("mysql:host=localhost;dbname=proiectpw", "root", "root");
     $stmt = $pdo->prepare("DELETE FROM note WHERE materie_id=:mid AND tip_nota=:idd");
     $stmt->execute(array(':mid' => $ID_m, ':idd' => $nota_ID));

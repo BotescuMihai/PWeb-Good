@@ -342,7 +342,7 @@
             var notanou = $('#noua_valoare_nota_put').val();
             var ponderenou = $('#pondere_nota_put').val();
             $.ajax({
-                url: "/profesor/materii/" + {{ ID_m }} +"/note/" + res,
+                url: "http://localhost:8888/myslimsite/public/profesor/materii/" + {{ ID_m }} +"/note/" + res,
                 type: "PUT",
                 data: {
                     'student': studenti,
