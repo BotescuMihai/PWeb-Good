@@ -104,7 +104,7 @@
             for (var i = 0; i < datas.length; i++)
                 data += datas[i] + '_';
             var findata = '';
-            for (var i = 0; i < data.length - 3; i++)
+            for (var i = 0; i < data.length - 2; i++)
                 findata += data[i];
             data = findata;
             //    data[data.length-1]='';
@@ -350,9 +350,14 @@
                     'pondere': ponderenou,
                 },
                 success: function (data) {
+                    var newdata = {
+                        'student': studenti,
+                        'nota': notanou,
+                        'pondere': ponderenou,
+                    };
                     console.log("PUT " + "/profesor/materii/" + {{ ID_m }} +"/note/" + res);
                     console.log("SUCCESS!");
-                    console.log("Data sent:" + data);
+                    console.log("Data sent:" + JSON.stringify(newdata));
                 },
                 error: function (jqXHR, textStatus, errorThrown) {
                     console.log("PUT " + "/profesor/materii/" + {{ ID_m }} +"/note/" + res);

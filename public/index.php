@@ -1,5 +1,4 @@
 <?php
-session_start();
 include '../api/email_validation.php';
 include '../api/db.php';
 include '../api/grades_classification.php';
@@ -8,12 +7,13 @@ use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\Factory\AppFactory;
 
+/*
 header('Access-Control-Allow-Origin: *');
 header("Access-Control-Allow-Methods: POST, GET, DELETE, PUT");
 header('Custom-Header: Test');
 header('Access-Control-Expose-Headers: Custom-Header');
 header('Content-type:text/plain');
-
+*/
 
 require __DIR__ . '/../vendor/autoload.php';
 
@@ -96,7 +96,7 @@ $app->get('/student/materii', function (Request $request, Response $response) {
     if (student(getEmail()) == false) {
         return $response->withJson(array('Error' => 'You must be logged in!'), 400);
     }
-    $query = "SELECT materie.id, denumire from materie
+    $query = "SELECT materie.id, materie.denumire from materie
 INNER JOIN student ON materie.id = student.materie_ID
 WHERE student.username ='" . getEmail() . "'";
     $stmt = $DB->execute_SELECT($query);
@@ -166,7 +166,7 @@ WHERE student.username = '" . getEmail() . "' AND materie.id = " . $args['ID_m']
             }
             $arr = array('profesor' => $profesor, 'ponderi' => $ponderi, 'note' => $note, 'id_materie' => $note[0]['idm'], 'uname' => getEmail(), 'nota_curs' => getNotaFinalaCurs($note), 'nota_seminar_laborator' => getNotaFinalaSeminarLab($note)); //'formula_curs' => getPonderiCurs($note), 'formula_seminar_laborator' => getPonderiSeminar_Laborator($note));
         } else         $arr = array('profesor' => $profesor, 'note' => $note, 'id_materie' => $note[0]['idm'], 'uname' => getEmail(), 'nota_curs' => getNotaFinalaCurs($note), 'nota_seminar_laborator' => getNotaFinalaSeminarLab($note)); //'formula_curs' => getPonderiCurs($note), 'formula_seminar_laborator' => getPonderiSeminar_Laborator($note));
-        return $resp->withJson(json_encode($arr), 200);
+        return json_encode($arr);
     }
     //  include '../api/situatie_student.php';
 //    $arr = note_student();
@@ -204,6 +204,8 @@ $app->get('/profesor/materii/{ID_m}', function (Request $request, Response $resp
     if (profesor(getEmail()) == false) {
         return $response->withJson(array('Error' => 'You must be logged in!'), 400);
     }
+    if (getStudentiInscrisi($DB, $ID_m) == null || getTitularCurs($DB, $ID_m) == null || getMaterie($DB, $ID_m) == null)
+        return $response->withJson(array('Error' => 'No records found!'), 404);
     $arr = array('inscrisi' => getStudentiInscrisi($DB, $ID_m)['nr_inscrisi'], 'titular' => getTitularCurs($DB, $ID_m)['prof_titular'], 'materie' => getMaterie($DB, $ID_m)['materie']);
     if ($arr['inscrisi'] == null && $arr['titular'] == null && $arr['materie'] == null) {
         return $response->withJson(array('Error' => 'No records found!'), 404);
@@ -467,7 +469,8 @@ $app->post('/profesor/materii/{ID_m}/studenti/note', function (Request $request,
             $id = $row['id'] + 1;
             break;
         }
-        $pdo = new PDO("mysql:host=localhost;dbname=proiectpw", "root", "root");
+        $DB = new db();
+        $pdo = $DB->getPDO();
         $stmt = $pdo->prepare("INSERT INTO note(id, materie_id, student_id, tip_nota, valoare, pondere)  VALUES (:id, :materie_id, :student_id, :tip_nota, :valoare, :pondere)");
         foreach ($studenti as $student) {
             $stmt->execute(array(':id' => $id, ':materie_id' => $ID_m, ':student_id' => $student, ':tip_nota' => $nota, ':valoare' => 0, ':pondere' => $pondere));
@@ -499,7 +502,8 @@ $app->post('/profesor/materii/{ID_m}/note/{nota_ID}', function (Request $request
             return $response->withJson(array('Error' => 'Record already exists! It will not be added...'), 400);
             die();//
         }
-        $pdo = new PDO("mysql:host=localhost;dbname=proiectpw", "root", "root");
+        $DB = new db();
+        $pdo = $DB->getPDO();
         $stmt = $pdo->prepare("UPDATE note SET tip_nota=(:nota_nou), pondere=(:pondere) WHERE tip_nota=(:nota_id) AND materie_id=(:materie_id)");
         $stmt->execute(array(':nota_nou' => $new_nota, ':pondere' => $pondere, ':nota_id' => $nota_id, ':materie_id' => $idm));
     }
@@ -517,9 +521,12 @@ $app->put('/profesor/materii/{ID_m}/note/{nota_ID}', function (Request $request,
     $student = $request->getParam('student');
     $nota = $request->getParam('nota');
     $pondere = $request->getParam('pondere');
-    $pdo = new PDO("mysql:host=localhost;dbname=proiectpw", "root", "root");
+    $DB = new db();
+    $pdo = $DB->getPDO();
     $stmt = $pdo->prepare("UPDATE note SET pondere=(:pondere), valoare=(:valoare) WHERE tip_nota=(:id) AND materie_id=(:mid) AND note.student_id=(SELECT student.id FROM student WHERE student.username=(:student) AND student.materie_ID=(:midd))");
     $stmt->execute(array(':pondere' => $pondere, ':valoare' => $nota, ':id' => $nota_ID, ':mid' => $ID_m, ':student' => $student, ':midd' => $ID_m));
+    print_r($nota_ID);
+    //  print_r("UPDATE note SET pondere=" . $pondere . ", valoare=" . $nota . " WHERE tip_nota=" . $nota_ID . " AND materie_id=" . $ID_m . " AND note.student_id=(SELECT student.id FROM student WHERE student.username=" . $student . " AND student.materie_ID=" . $ID_m . ")");
 });
 
 
@@ -531,7 +538,8 @@ $app->delete('/profesor/materii/{ID_m}/note/{nota_ID}', function (Request $reque
     if (profesor(getEmail()) == false) {
         return $response->withJson(array('Error' => 'You must be logged in!'), 400);
     }
-    $pdo = new PDO("mysql:host=localhost;dbname=proiectpw", "root", "root");
+    $DB = new db();
+    $pdo = $DB->getPDO();
     $stmt = $pdo->prepare("DELETE FROM note WHERE materie_id=:mid AND tip_nota=:idd");
     $stmt->execute(array(':mid' => $ID_m, ':idd' => $nota_ID));
 });
