@@ -219,6 +219,9 @@ $app->get('/profesor/materii/{ID_m}', function (Request $request, Response $resp
 //////
 ///
 
+$app->get('/demo', function ($request, $response, $args) {
+    return $this->view->render($response, 'demo.twig');
+});
 
 $app->get('/teacher/courses/{ID_m}/students', function ($request, $response, $args) {
     return $this->view->render($response, 'student_grades.twig', ['ID_m' => $args['ID_m']]);
